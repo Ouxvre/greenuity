@@ -47,7 +47,6 @@ async function handleRegister(event) {
   event.preventDefault();
   
   const name = document.getElementById('registerName').value;
-  const phone = document.getElementById('registerPhone').value;
   const email = document.getElementById('registerEmail').value;
   const password = document.getElementById('registerPassword').value;
 
@@ -70,7 +69,6 @@ async function handleRegister(event) {
     if (typeof db !== 'undefined') {
       await db.collection('users').doc(userCredential.user.uid).set({
         name: name,
-        phone: phone,
         email: email,
         role: 'user',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
