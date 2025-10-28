@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Greenuity - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1B4D57",
+              "primary-light": "#2D6670",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Header -->
+    <div class="bg-primary text-white p-6 rounded-b-3xl">
+      <div class="flex items-center space-x-3 mb-6">
+        <div>
+          <p class="text-xs opacity-80">Halo,</p>
+          <h1 class="text-xl font-bold" id="userName">Dendy Putra</h1>
+        </div>
+      </div>
+
+      <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-4">
+        <p class="text-xs opacity-80 mb-1">Total Lahan</p>
+        <p class="text-3xl font-bold" id="totalDevices">3</p>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="px-6 py-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">Device</h2>
+
+      <!-- Device List -->
+      <div class="space-y-3" id="deviceList">
+        
+        
+      </div>
+    </div>
+
+<!-- Bottom Navigation - Floating -->
+<div class="fixed bottom-4 left-4 right-4 z-50">
+  <div class="bg-white rounded-3xl shadow-2xl px-6 py-4">
+    <div class="flex items-center justify-around">
+      <!-- BERANDA (aktif / primary) -->
+      <button onclick="goToHome()" class="flex flex-col items-center space-y-1 text-primary">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10.707 1.293a1 1 0 00-1.414 0l-8 8a1 1 0 001.414 1.414L3 10.414V17a1 1 0 001 1h3a1 1 0 001-1v-4h2v4a1 1 0 001 1h3a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-8-8z"/>
+        </svg>
+        <span class="text-xs font-semibold">Beranda</span>
+      </button>
+
+      <button onclick="goToMonitoring()" class="flex flex-col items-center space-y-1 text-gray-600">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        <span class="text-xs">Monitoring</span>
+      </button>
+
+      <button onclick="goToIrrigation()" class="flex flex-col items-center space-y-1 text-gray-600">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+        </svg>
+        <span class="text-xs">Irigasi</span>
+      </button>
+
+      <button onclick="goToEducation()" class="flex flex-col items-center space-y-1 text-gray-600">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+        <span class="text-xs">Edukasi</span>
+      </button>
+
+      <!-- PROFIL (non-aktif / abu) -->
+      <button onclick="goToProfile()" class="flex flex-col items-center space-y-1 text-gray-600">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-xs">Profil</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+      // Navigation functions
+      function goToHome() {
+        window.location.href = `../dashboard/dashboard.html`;
+      }
+
+      function goToMonitoring() {
+        window.location.href = "monitoring.html";
+      }
+
+      function goToAddDevice() {
+        window.location.href = "add-device.html";
+      }
+
+      function goToIrrigation() {
+        window.location.href = "irrigation.html";
+      }
+
+      function goToProfile() {
+        window.location.href = "../profile/profile.html";
+      }
+
+      // Load user data
+      // auth.onAuthStateChanged((user) => {
+      //   if (!user) {
+      //     window.location.href = 'login.html';
+      //   } else {
+      //     document.getElementById('userName').textContent = user.displayName || 'User';
+      //   }
+      // });
+    </script>
+  </body>
+</html>

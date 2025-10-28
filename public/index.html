@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Greenuity - Smart Farming</title>
+
+    <!-- tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- google font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#7CB342",
+              secondary: "#558B2F",
+              dark: "#33691E",
+            },
+            fontFamily: {
+              poppins: ["Poppins", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .hero-overlay {
+        background: linear-gradient(
+          to right,
+          rgba(0, 0, 0, 0.3),
+          rgba(0, 0, 0, 0)
+        );
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 font-poppins">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full top-0 z-50">
+      <div class="container mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+          <!-- Logo -->
+          <div class="flex items-center gap-2">
+            <span class="text-4xl font-bold text-primary">Greenuity</span>
+          </div>
+
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex items-center gap-8">
+            <a
+              href="#beranda"
+              class="text-gray-700 hover:text-primary font-medium transition"
+              >Beranda</a
+            >
+            <a
+              href="#tentang-kami"
+              class="text-gray-700 hover:text-primary font-medium transition"
+              >Tentang Kami</a
+            >
+            <a
+              href="#layanan"
+              class="text-gray-700 hover:text-primary font-medium transition"
+              >Layanan</a
+            >
+            <a
+              href="#cara-kerja"
+              class="text-gray-700 hover:text-primary font-medium transition"
+              >Cara Kerja</a
+            >
+            <a
+              href="#faq"
+              class="text-gray-700 hover:text-primary font-medium transition"
+              >FAQ</a
+            >
+            <a
+              href="#testimoni"
+              class="text-gray-700 hover:text-primary font-medium transition"
+              >Testimoni</a
+            >
+          </div>
+
+          <!-- CTA Button -->
+          <a
+            href="/pages/auth/login.html"
+            class="hidden md:flex items-center gap-2 bg-primary hover:bg-secondary text-white px-6 py-2.5 rounded-full font-semibold transition shadow-lg hover:shadow-xl"
+          >
+            <span>Connect Now</span>
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </a>
+
+          <!-- Mobile Menu Button -->
+          <button onclick="toggleMobileMenu()" class="md:hidden">
+            <svg
+              class="w-6 h-6 text-gray-700"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 space-y-4">
+          <a
+            href="#beranda"
+            class="block text-gray-700 hover:text-primary font-medium"
+            >Beranda</a
+          >
+          <a
+            href="#tentang-kami"
+            class="block text-gray-700 hover:text-primary font-medium"
+            >Tentang Kami</a
+          >
+          <a
+            href="#layanan"
+            class="block text-gray-700 hover:text-primary font-medium"
+            >Layanan</a
+          >
+          <a
+            href="#cara-kerja"
+            class="block text-gray-700 hover:text-primary font-medium"
+            >Cara Kerja</a
+          >
+          <a
+            href="#faq"
+            class="block text-gray-700 hover:text-primary font-medium"
+            >FAQ</a
+          >
+          <a
+            href="#testimoni"
+            class="block text-gray-700 hover:text-primary font-medium"
+            >Testimoni</a
+          >
+          <a
+            href="/pages/auth/login.html"
+            class="block text-center bg-primary text-white px-6 py-2.5 rounded-full font-semibold"
+            >Connect Now</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="beranda" class="mt-16 relative">
+      <div
+        class="relative h-[500px] md:h-[600px] overflow-hidden rounded-3xl mx-6 mt-6"
+      >
+        <!-- Background Image -->
+        <img
+          src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1200"
+          alt="Smart Farming"
+          class="absolute inset-0 w-full h-full object-cover"
+        />
+
+        <!-- Overlay -->
+        <div class="absolute inset-0 hero-overlay"></div>
+
+        <!-- Content -->
+        <div class="relative container mx-auto px-6 h-full flex items-center">
+          <div class="max-w-2xl text-white">
+            <h1
+              class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight"
+            >
+              Smart Farming yang Mengubah Cara Anda Bertani.
+            </h1>
+            <p class="text-lg md:text-xl mb-8 text-white/90">
+              Pantau lahan pertanian Anda dengan teknologi IoT modern untuk
+              hasil panen yang lebih baik.
+            </p>
+            <button
+              onclick="window.location.href='register.html'"
+              class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white px-8 py-4 rounded-full font-semibold text-lg transition shadow-2xl hover:shadow-3xl"
+            >
+              <span>Hubungi Kami</span>
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div
+          class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce"
+        >
+          <svg
+            class="w-8 h-8 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 px-6">
+      <div class="container mx-auto">
+        <div class="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+          <!-- Image Grid -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-4">
+              <img
+                src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=400"
+                alt="Farming 1"
+                class="rounded-2xl w-full h-48 object-cover shadow-lg"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400"
+                alt="Farming 2"
+                class="rounded-2xl w-full h-64 object-cover shadow-lg"
+              />
+            </div>
+            <div class="space-y-4 pt-8">
+              <img
+                src="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=400"
+                alt="Farming 3"
+                class="rounded-2xl w-full h-64 object-cover shadow-lg"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=400"
+                alt="Farming 4"
+                class="rounded-2xl w-full h-48 object-cover shadow-lg"
+              />
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+              Powering Farm With Clean Energy
+            </h2>
+            <p class="text-gray-600 leading-relaxed mb-8">
+              Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Odipsum
+              ante qulrna venenaitis ac. Donecet rhcrus sed est. Nunc nisi
+              feugist ultrices nunc nonvenelis velit
+            </p>
+            <button
+              onclick="window.location.href='#layanan'"
+              class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white px-6 py-3 rounded-full font-semibold transition shadow-lg hover:shadow-xl"
+            >
+              <span>Learn More</span>
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="layanan" class="py-20 px-6 bg-white">
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+            Layanan Kami
+          </h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">
+            Solusi lengkap untuk pertanian modern dengan teknologi IoT terdepan
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Service 1 -->
+          <div
+            class="bg-gradient-to-br from-primary/5 to-white rounded-3xl p-8 hover:shadow-xl transition"
+          >
+            <div
+              class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6"
+            >
+              <svg
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-3">
+              Monitoring Real-time
+            </h3>
+            <p class="text-gray-600">
+              Pantau kondisi tanah, suhu, dan kelembapan secara langsung dari
+              smartphone Anda
+            </p>
+          </div>
+
+          <!-- Service 2 -->
+          <div
+            class="bg-gradient-to-br from-primary/5 to-white rounded-3xl p-8 hover:shadow-xl transition"
+          >
+            <div
+              class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6"
+            >
+              <svg
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-3">
+              Irigasi Otomatis
+            </h3>
+            <p class="text-gray-600">
+              Sistem penyiraman cerdas yang menghemat air dan waktu Anda secara
+              signifikan
+            </p>
+          </div>
+
+          <!-- Service 3 -->
+          <div
+            class="bg-gradient-to-br from-primary/5 to-white rounded-3xl p-8 hover:shadow-xl transition"
+          >
+            <div
+              class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6"
+            >
+              <svg
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-3">
+              Notifikasi Pintar
+            </h3>
+            <p class="text-gray-600">
+              Dapatkan peringatan otomatis untuk kondisi tanah yang memerlukan
+              perhatian
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 px-6">
+      <div class="container mx-auto max-w-4xl">
+        <div
+          class="bg-gradient-to-r from-primary to-secondary rounded-3xl p-12 text-center text-white shadow-2xl"
+        >
+          <h2 class="text-3xl md:text-4xl font-bold mb-4">
+            Siap Mengubah Cara Bertani Anda?
+          </h2>
+          <p class="text-xl mb-8 text-white/90">
+            Bergabunglah dengan ribuan petani yang sudah merasakan manfaatnya
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onclick="window.location.href='register.html'"
+              class="bg-white text-primary px-8 py-4 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"
+            >
+              Mulai Sekarang
+            </button>
+            <button
+              onclick="window.location.href='#tentang-kami'"
+              class="border-2 border-white text-white px-8 py-4 rounded-full font-bold hover:bg-white/10 transition"
+            >
+              Pelajari Lebih Lanjut
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 px-6">
+      <div class="container mx-auto max-w-6xl">
+        <div class="grid md:grid-cols-4 gap-8 mb-8">
+          <!-- Brand -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <img
+                src="../public/assets/logo/logo-greenuity.svg"
+                alt="logo-greenuity"
+                class="w-10 mb-4"
+              />
+              <span class="text-2xl font-bold">Greenuity</span>
+            </div>
+            <p class="text-gray-400">
+              Smart farming untuk masa depan pertanian Indonesia
+            </p>
+          </div>
+
+          <!-- Links -->
+          <div>
+            <h4 class="font-bold mb-4">Produk</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li>
+                <a href="#" class="hover:text-primary transition">Monitoring</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-primary transition">Irigasi</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-primary transition">Analitik</a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="font-bold mb-4">Perusahaan</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li>
+                <a href="#" class="hover:text-primary transition"
+                  >Tentang Kami</a
+                >
+              </li>
+              <li>
+                <a href="#" class="hover:text-primary transition">Karir</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-primary transition">Blog</a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="font-bold mb-4">Kontak</h4>
+            <ul class="space-y-2 text-gray-400">
+              <li>Email: info@greenuity.id</li>
+              <li>Phone: +62 812-3456-7890</li>
+              <li>Jakarta, Indonesia</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+          <p>&copy; 2025 Greenuity. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function toggleMobileMenu() {
+        const menu = document.getElementById("mobileMenu");
+        menu.classList.toggle("hidden");
+      }
+
+      // Smooth scroll
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
