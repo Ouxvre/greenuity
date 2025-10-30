@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edukasi - Greenuity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Hilangkan scrollbar tapi tetap bisa digeser */
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body class="bg-[#F8FAF8] text-[#0E3B43] font-sans">
+    <section class="px-5 pt-6 pb-10">
+      <!-- Judul -->
+      <h1 class="text-xl font-semibold text-center mb-6">Edukasi</h1>
+
+      <!-- Artikel Populer -->
+      <h2 class="text-base font-semibold mb-3">Artikel Populer 🔥</h2>
+
+      <!-- Wrapper Geser -->
+      <div class="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
+        <!-- Card 1 -->
+        <div
+          class="min-w-[260px] relative rounded-2xl overflow-hidden shadow-sm flex-shrink-0"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80"
+            alt="Artikel Populer"
+            class="w-full h-40 object-cover"
+          />
+          <div
+            class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3"
+          >
+            <p class="text-white text-sm font-medium">
+              Cara Mengatasi Penyakit Hama Tanaman Secara Alami
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div
+          class="min-w-[260px] relative rounded-2xl overflow-hidden shadow-sm flex-shrink-0"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=800&q=80"
+            alt="Artikel Populer"
+            class="w-full h-40 object-cover"
+          />
+          <div
+            class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3"
+          >
+            <p class="text-white text-sm font-medium">
+              Teknik Menanam Sayur Hidroponik Bagi Pemula
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div
+          class="min-w-[260px] relative rounded-2xl overflow-hidden shadow-sm flex-shrink-0"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1590490360182-663cc16ef6d2?auto=format&fit=crop&w=800&q=80"
+            alt="Artikel Populer"
+            class="w-full h-40 object-cover"
+          />
+          <div
+            class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3"
+          >
+            <p class="text-white text-sm font-medium">
+              Panduan Dasar Budidaya Tanaman Organik
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Komunitas -->
+      <div class="flex items-center justify-between mt-8 mb-3">
+        <h2 class="text-base font-semibold">Komunitas</h2>
+        <a
+          href="#"
+          class="text-sm text-[#0E3B43] flex items-center gap-1 hover:underline"
+        >
+          Lihat semua <span>→</span>
+        </a>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Item Komunitas -->
+        <div
+          class="flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 text-gray-400"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 12c2.7 0 5.3 1.4 6.6 3.5.4.6.4 1.5-.1 2.1-.4.6-1.3.7-2 .3C14.7 16.9 13.4 16 12 16s-2.7.9-4.5 1.9c-.7.4-1.6.3-2-.3-.5-.6-.6-1.5-.1-2.1C6.7 13.4 9.3 12 12 12zm0-2a3 3 0 100-6 3 3 0 000 6z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-medium text-sm">Forum Petani Indonesia</p>
+              <p class="text-gray-500 text-xs">Group Publik · 128 Anggota</p>
+            </div>
+          </div>
+          <button
+            class="border border-[#0E3B43] text-[#0E3B43] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#0E3B43] hover:text-white transition"
+          >
+            Bergabung
+          </button>
+        </div>
+
+        <div
+          class="flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gray-100 rounded-full"></div>
+            <div>
+              <p class="font-medium text-sm">Petani Talok</p>
+              <p class="text-gray-500 text-xs">Group Publik · 128 Anggota</p>
+            </div>
+          </div>
+          <button
+            class="bg-[#0E3B43] text-white text-xs font-semibold px-3 py-1.5 rounded-full"
+          >
+            Gabung
+          </button>
+        </div>
+
+        <div
+          class="flex items-center justify-between bg-white rounded-2xl px-4 py-3 shadow-sm"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gray-100 rounded-full"></div>
+            <div>
+              <p class="font-medium text-sm">Petani Tanjung Uban</p>
+              <p class="text-gray-500 text-xs">Group Publik · 128 Anggota</p>
+            </div>
+          </div>
+          <button
+            class="bg-[#0E3B43] text-white text-xs font-semibold px-3 py-1.5 rounded-full"
+          >
+            Gabung
+          </button>
+        </div>
+      </div>
+
+      <!-- Rekomendasi -->
+      <div class="flex items-center justify-between mt-8 mb-3">
+        <h2 class="text-base font-semibold">Rekomendasi</h2>
+        <a
+          href="#"
+          class="text-sm text-[#0E3B43] flex items-center gap-1 hover:underline"
+        >
+          Lihat semua <span>→</span>
+        </a>
+      </div>
+
+      <div class="flex gap-3 bg-white rounded-2xl p-3 shadow-sm items-center">
+        <img
+          src="https://images.unsplash.com/photo-1590490360182-663cc16ef6d2?auto=format&fit=crop&w=600&q=80"
+          alt="Rekomendasi"
+          class="w-16 h-16 object-cover rounded-xl"
+        />
+        <div class="flex-1">
+          <p class="font-medium text-sm leading-tight">
+            Cara Menyemai Tanaman Yang Baik Dan Benar
+          </p>
+          <p class="text-gray-500 text-xs mt-1">
+            Petani Sayang · 6 Jam Yang Lalu
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Navigation - Floating -->
+    <div class="fixed bottom-4 left-4 right-4 z-50">
+      <div class="bg-white rounded-3xl shadow-2xl px-6 py-4">
+        <div class="flex items-center justify-around">
+          <button
+            onclick="goToHome()"
+            class="flex flex-col items-center space-y-1 text-gray-600"
+          >
+            <svg
+              class="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+            <span class="text-xs">Beranda</span>
+          </button>
+
+          <button
+            onclick="goToMonitoring()"
+            class="flex flex-col items-center space-y-1 text-gray-600"
+          >
+            <svg
+              class="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            <span class="text-xs">Monitoring</span>
+          </button>
+
+          <button
+            onclick="goToIrrigation()"
+            class="flex flex-col items-center space-y-1 text-gray-600"
+          >
+            <svg
+              class="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+              />
+            </svg>
+            <span class="text-xs">Irigasi</span>
+          </button>
+
+          <button
+            onclick="goToEducation()"
+            class="flex flex-col items-center space-y-1 text-primary"
+          >
+            <svg
+              class="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+            <span class="text-xs font-semibold">Edukasi</span>
+          </button>
+
+          <button
+            onclick="goToProfile()"
+            class="flex flex-col items-center space-y-1 text-gray-600"
+          >
+            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span class="text-xs">Profil</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    // Navigation functions
+    function goToHome() {
+      window.location.href = `../dashboard/dashboard.html`;
+    }
+
+    function goToMonitoring() {
+      window.location.href = "../monitoring/monitoring.html";
+    }
+
+    function goToIrrigation() {
+      window.location.href = "irrigation.html";
+    }
+
+    function goToEducation() {
+      window.location.href = "../edukasi/edukasi.html";
+    }
+
+    function goToProfile() {
+      window.location.href = "../profile/profile.html";
+    }
+  </script>
+</html>

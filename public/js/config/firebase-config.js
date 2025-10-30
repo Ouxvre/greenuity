@@ -14,7 +14,8 @@ firebase.initializeApp(firebaseConfig);
 
 // Export Firebase services
 const auth = firebase.auth();
-const db = firebase.firestore(); // Jika pakai Firestore
+const db = firebase.firestore();
+const storage = firebase.storage();
 
 // Optional: Enable persistence untuk offline support
 if (typeof firebase.firestore !== "undefined") {

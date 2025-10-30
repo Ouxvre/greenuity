@@ -48,12 +48,8 @@
             </svg>
           </div>
           <div class="flex-1">
-            <h2 class="text-lg font-bold text-gray-800" id="profileName">
-              Dendy Putra
-            </h2>
-            <p class="text-sm text-gray-500" id="profileEmail">
-              dendyputra.dev@gmail.com
-            </p>
+            <h2 class="text-lg font-bold text-gray-800" id="userName"></h2>
+            <p class="text-sm text-gray-500" id="profileEmail"></p>
           </div>
         </div>
       </div>
@@ -444,63 +440,110 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <!-- Konfigurasi Firebase kamu -->
-    <script src="/../js/config/firebase-config.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
 
     <!-- Proteksi halaman -->
-    <script src="/../components/authGuard.js"></script>
+    <script src="/components/authGuard.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Konfigurasi Firebase -->
+    <script src="/js/config/firebase-config.js"></script>
+
+    <!-- Proteksi halaman -->
+    <script src="/components/authGuard.js"></script>
 
     <script>
-      // Jalankan proteksi halaman
-      authGuard().then((user) => {
-        if (user) {
-          document.getElementById("profileName").textContent =
-            user.displayName || "User";
-          document.getElementById("profileEmail").textContent = user.email;
-        }
+      // TUNGGU SAMPAI SEMUA READY
+      window.addEventListener("DOMContentLoaded", () => {
+        console.log("🔄 Page loaded, checking auth...");
+
+        // Tunggu authGuard available
+        const checkAuthGuard = setInterval(() => {
+          if (typeof authGuard === "function") {
+            clearInterval(checkAuthGuard);
+
+            // Jalankan auth guard SEKALI SAJA
+            authGuard()
+              .then((user) => {
+                console.log("✅ User authenticated:", user);
+
+                // Update UI dengan data user
+                const userName = document.getElementById("userName");
+                const profileEmail = document.getElementById("profileEmail");
+
+                if (userName) {
+                  userName.textContent = user.displayName || "User";
+                }
+
+                if (profileEmail) {
+                  profileEmail.textContent = user.email || "-";
+                }
+
+                console.log("✅ Profile updated:", {
+                  name: user.displayName,
+                  email: user.email,
+                });
+              })
+              .catch((err) => {
+                console.error("❌ AuthGuard error:", err);
+              });
+          }
+        }, 100);
+
+        // Timeout jika authGuard tidak load dalam 5 detik
+        setTimeout(() => {
+          clearInterval(checkAuthGuard);
+          console.error("❌ AuthGuard timeout - tidak terload!");
+        }, 5000);
       });
 
       // Navigation functions
       function goToHome() {
-        window.location.href = "../dashboard/dashboard.html";
+        window.location.href = "/pages/dashboard/dashboard.html";
       }
 
       function goToMonitoring() {
-        window.location.href = "../monitoring/monitoring.html";
+        window.location.href = "/pages/monitoring/monitoring.html";
       }
 
       function goToIrrigation() {
-        window.location.href = "irrigation.html";
+        window.location.href = "/pages/irrigation/irrigation.html";
       }
 
       function goToEducation() {
-        window.location.href = "education.html";
+        window.location.href = "/pages/edukasi/edukasi.html";
       }
 
       function goToEditProfile() {
-        window.location.href = "edit-profile.html";
+        window.location.href = "/pages/profile/edit-profile.html";
       }
 
       function goToChangePassword() {
-        window.location.href = "change-password.html";
+        window.location.href = "/pages/profile/change-password.html";
       }
 
       function goToTerms() {
-        window.location.href = "terms.html";
+        window.location.href = "/pages/profile/terms.html";
       }
 
       function goToFAQ() {
-        window.location.href = "faq.html";
+        window.location.href = "/pages/profile/faq.html";
       }
 
       // Toggle notification
       function toggleNotification() {
         const toggle = document.getElementById("notificationToggle");
         if (toggle.checked) {
-          console.log("Notifikasi diaktifkan");
+          console.log("✅ Notifikasi diaktifkan");
         } else {
-          console.log("Notifikasi dinonaktifkan");
+          console.log("❌ Notifikasi dinonaktifkan");
         }
       }
 
@@ -509,8 +552,10 @@
         if (confirm("Apakah Anda yakin ingin keluar?")) {
           try {
             await auth.signOut();
-            window.location.href = "/../index.html";
+            console.log("✅ Logout berhasil");
+            window.location.href = "/index.html";
           } catch (error) {
+            console.error("❌ Gagal logout:", error);
             alert("Gagal logout: " + error.message);
           }
         }
