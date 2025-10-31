@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // User belum login
           if (!publicPages.includes(currentPage)) {
             console.log('⚠️ Redirecting to login - user not authenticated');
-            window.location.href = "/auth/login.html";
+            window.location.href = "/pages/auth/login.html";
           }
           reject("Belum login");
         } else if (!user.emailVerified && !publicPages.includes(currentPage)) {

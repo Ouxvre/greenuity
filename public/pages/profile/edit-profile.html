@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Profil - Greenuity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1B4D57",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-10 shadow-sm">
+      <div class="flex items-center justify-between">
+        <button
+          onclick="goBack()"
+          class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <h1 class="text-lg font-bold">Edit Profil</h1>
+        <div class="w-10"></div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-6 py-8 max-w-md mx-auto">
+      <!-- Profile Photo Section -->
+      <div class="flex flex-col items-center mb-8">
+        <div class="relative">
+          <!-- Avatar -->
+          <div
+            id="avatarContainer"
+            class="w-32 h-32 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden"
+          >
+            <img
+              id="avatarPreview"
+              src=""
+              alt="Profile"
+              class="w-full h-full object-cover hidden"
+            />
+            <svg
+              id="defaultAvatar"
+              class="w-16 h-16 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+
+          <!-- Edit Photo Button -->
+          <button
+            onclick="document.getElementById('photoInput').click()"
+            class="absolute bottom-0 right-0 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-gray-200 hover:bg-gray-50 transition"
+          >
+            <svg
+              class="w-5 h-5 text-gray-700"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </button>
+
+          <!-- Hidden File Input -->
+          <input
+            type="file"
+            id="photoInput"
+            accept="image/*"
+            class="hidden"
+            onchange="previewPhoto(event)"
+          />
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form id="editProfileForm" class="space-y-5">
+        <!-- Nama Lengkap -->
+        <div>
+          <label class="block text-sm font-medium text-gray-900 mb-2"
+            >Nama Lengkap</label
+          >
+          <input
+            type="text"
+            id="fullName"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+            required
+          />
+        </div>
+
+        <!-- E-mail -->
+        <div>
+          <label class="block text-sm font-medium text-gray-900 mb-2"
+            >E-mail</label
+          >
+          <input
+            type="email"
+            id="email"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed outline-none"
+            placeholder="dendyputra.dev@gmail.com"
+            disabled
+            readonly
+          />
+          <p class="text-xs text-gray-500 mt-1">Email tidak dapat diubah</p>
+        </div>
+
+        <!-- Nomor Telepon -->
+        <div>
+          <label class="block text-sm font-medium text-gray-900 mb-2"
+            >Nomor Telepon</label
+          >
+
+          <input
+            type="tel"
+            id="phone"
+            pattern="(\+)?[0-9\s\-]*"
+            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+            placeholder="+62 8965-xxxx-xxxx"
+          />
+        </div>
+
+        <!-- Save Button -->
+        <button
+          type="submit"
+          class="w-full py-4 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition shadow-lg hover:shadow-xl mt-8"
+        >
+          Simpan Perubahan
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div
+      id="loadingOverlay"
+      class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-2xl p-8 text-center">
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"
+        ></div>
+        <p class="text-gray-700 font-medium">Menyimpan perubahan...</p>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div
+      id="successModal"
+      class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 px-6"
+    >
+      <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center">
+        <div
+          class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+        >
+          <svg
+            class="w-10 h-10 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-3">Berhasil!</h3>
+        <p class="text-gray-600 mb-6">Profil Anda telah berhasil diperbarui</p>
+        <button
+          onclick="closeSuccessModal()"
+          class="w-full py-3 px-6 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="/js/config/firebase-config.js"></script>
+
+    <!-- Auth Guard -->
+    <script src="/components/authGuard.js"></script>
+
+    <script>
+      let currentUser = null;
+      let photoFile = null;
+
+      // Load user data when page loads
+      window.addEventListener("DOMContentLoaded", () => {
+        const checkAuthGuard = setInterval(() => {
+          if (typeof authGuard === "function") {
+            clearInterval(checkAuthGuard);
+
+            authGuard()
+              .then((user) => {
+                currentUser = user;
+                console.log("✅ User loaded:", user.email);
+                loadUserData(user);
+              })
+              .catch((err) => {
+                console.error("❌ Auth error:", err);
+              });
+          }
+        }, 100);
+
+        setTimeout(() => clearInterval(checkAuthGuard), 5000);
+      });
+
+      // Load user data to form
+      async function loadUserData(user) {
+        try {
+          // Set basic info
+          document.getElementById("fullName").value = user.displayName || "";
+          document.getElementById("email").value = user.email || "";
+
+          // Load photo if exists
+          if (user.photoURL) {
+            document.getElementById("avatarPreview").src = user.photoURL;
+            document.getElementById("avatarPreview").classList.remove("hidden");
+            document.getElementById("defaultAvatar").classList.add("hidden");
+          }
+
+          // Load additional data from Firestore
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+
+            if (userData.phone) {
+              document.getElementById("phone").value = userData.phone;
+            }
+          }
+
+          console.log("✅ User data loaded to form");
+        } catch (error) {
+          console.error("❌ Error loading user data:", error);
+        }
+      }
+
+      // Preview photo before upload
+      function previewPhoto(event) {
+        const file = event.target.files[0];
+        if (file) {
+          // Validate file size (max 2MB)
+          if (file.size > 2 * 1024 * 1024) {
+            alert("Ukuran foto maksimal 2MB!");
+            return;
+          }
+
+          // Validate file type
+          if (!file.type.startsWith("image/")) {
+            alert("File harus berupa gambar!");
+            return;
+          }
+
+          photoFile = file;
+
+          // Preview
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            document.getElementById("avatarPreview").src = e.target.result;
+            document.getElementById("avatarPreview").classList.remove("hidden");
+            document.getElementById("defaultAvatar").classList.add("hidden");
+          };
+          reader.readAsDataURL(file);
+
+          console.log("✅ Photo selected:", file.name);
+        }
+      }
+
+      // Upload photo to Firebase Storage
+      async function uploadPhoto(userId) {
+        if (!photoFile) return null;
+
+        try {
+          console.log("📤 Uploading photo...");
+
+          const storageRef = storage.ref();
+          const photoRef = storageRef.child(
+            `profile_photos/${userId}/${Date.now()}_${photoFile.name}`
+          );
+
+          const snapshot = await photoRef.put(photoFile);
+          const downloadURL = await snapshot.ref.getDownloadURL();
+
+          console.log("✅ Photo uploaded:", downloadURL);
+          return downloadURL;
+        } catch (error) {
+          console.error("❌ Error uploading photo:", error);
+          throw error;
+        }
+      }
+
+      // Handle form submit
+      document
+        .getElementById("editProfileForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          if (!currentUser) {
+            alert("User tidak ditemukan!");
+            return;
+          }
+
+          const fullName = document.getElementById("fullName").value.trim();
+          const phone = document.getElementById("phone").value.trim();
+
+          // Show loading
+          document.getElementById("loadingOverlay").classList.remove("hidden");
+          document.getElementById("loadingOverlay").classList.add("flex");
+
+          try {
+            let photoURL = currentUser.photoURL;
+
+            // Upload photo if changed
+            if (photoFile) {
+              photoURL = await uploadPhoto(currentUser.uid);
+            }
+
+            // Update Firebase Auth profile
+            await currentUser.updateProfile({
+              displayName: fullName,
+              photoURL: photoURL,
+            });
+
+            // Update Firestore
+            await db.collection("users").doc(currentUser.uid).set(
+              {
+                fullName: fullName,
+                email: currentUser.email,
+                phone: phone,
+                photoURL: photoURL,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+              },
+              { merge: true }
+            );
+
+            console.log("✅ Profile updated successfully");
+
+            // Hide loading
+            document.getElementById("loadingOverlay").classList.add("hidden");
+            document.getElementById("loadingOverlay").classList.remove("flex");
+
+            // Show success modal
+            document.getElementById("successModal").classList.remove("hidden");
+            document.getElementById("successModal").classList.add("flex");
+          } catch (error) {
+            console.error("❌ Error updating profile:", error);
+
+            // Hide loading
+            document.getElementById("loadingOverlay").classList.add("hidden");
+            document.getElementById("loadingOverlay").classList.remove("flex");
+
+            let errorMessage = "Gagal memperbarui profil!";
+
+            if (error.code === "storage/unauthorized") {
+              errorMessage =
+                "Tidak memiliki izin untuk upload foto. Periksa Firebase Storage Rules.";
+            } else if (error.code === "permission-denied") {
+              errorMessage =
+                "Tidak memiliki izin untuk mengubah data. Periksa Firestore Rules.";
+            }
+
+            alert(errorMessage + "\n\nDetail: " + error.message);
+          }
+        });
+
+      // Close success modal and go back
+      function closeSuccessModal() {
+        document.getElementById("successModal").classList.add("hidden");
+        document.getElementById("successModal").classList.remove("flex");
+        goBack();
+      }
+
+      // Go back to profile page
+      function goBack() {
+        window.location.href = "profile.html";
+      }
+    </script>
+  </body>
+</html>

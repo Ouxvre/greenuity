@@ -77,7 +77,7 @@ async function handleRegister(event) {
     // Update profile dengan nama
     await user.updateProfile({ displayName: name });
 
-    // Simpan ke Firestore (optional)
+    // Simpan ke Firestore
     if (typeof db !== "undefined") {
       await db.collection("users").doc(user.uid).set({
         name,
@@ -120,20 +120,6 @@ async function handleRegister(event) {
     }
 
     showAlert(errorMessage, "error");
-  }
-}
-
-// Handle Logout
-async function handleLogout() {
-  try {
-    await auth.signOut();
-    showAlert("Logout berhasil!", "success");
-    setTimeout(() => {
-      window.location.href = "../pages/login.html";
-    }, 1000);
-  } catch (error) {
-    console.error("Logout error:", error);
-    showAlert("Gagal logout: " + error.message, "error");
   }
 }
 
