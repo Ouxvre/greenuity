@@ -3,7 +3,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyA5mXAa75PSalxvZLwoF-pCUMTWQIW1-5s",
   authDomain: "greenuity-id.firebaseapp.com",
   projectId: "greenuity-id",
-  storageBucket: "greenuity-id.appspot.com", // ✅ FIXED
+  databaseURL: "https://greenuity-id-default-rtdb.asia-southeast1.firebasedatabase.app",
   messagingSenderId: "162448298083",
   appId: "1:162448298083:web:4d3e40be12bffa1c546856",
   measurementId: "G-GDXYRXDR5T",
@@ -15,7 +15,7 @@ firebase.initializeApp(firebaseConfig);
 // Export Firebase services
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
+const database = firebase.database();
 
 // Enable offline persistence (optional, safe version)
 try {
@@ -37,4 +37,4 @@ console.log("✅ Firebase initialized successfully");
 // Make available globally (optional)
 window.auth = auth;
 window.db = db;
-window.storage = storage;
+window.database = database;

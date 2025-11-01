@@ -116,6 +116,7 @@
     <!-- Add Device Button -->
     <div class="px-6 mt-8 mb-10">
       <button
+        onclick="goToAddDevice()"
         class="w-full bg-gray-200 text-gray-600 py-3 rounded-full flex items-center justify-center gap-2 hover:bg-gray-300 transition"
       >
         <svg
@@ -259,6 +260,9 @@
 
     function goToProfile() {
       window.location.href = "../profile/profile.html";
+    }
+    function goToAddDevice() {
+      window.location.href = "add-device.html";
     }
   </script>
 </html>
