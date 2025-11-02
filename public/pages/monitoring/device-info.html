@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Informasi Perangkat - Greenuity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { poppins: ['Poppins', 'sans-serif'] },
+            colors: { primary: "#1B4D57" }
+          }
+        }
+      };
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen font-poppins pb-8">
+    <!-- Header -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-10 shadow-sm">
+      <div class="flex items-center justify-between">
+        <button onclick="goBack()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1 class="text-lg font-bold">Informasi Perangkat</h1>
+        <div class="w-10"></div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-6 py-6 max-w-md mx-auto space-y-6">
+      
+      <!-- Device ID Info -->
+      <div class="bg-gradient-to-r from-primary to-primary/80 text-white rounded-2xl p-5 shadow-lg">
+        <div class="flex items-center space-x-3 mb-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+          </svg>
+          <div>
+            <p class="text-xs opacity-80">Device ID</p>
+            <p class="text-lg font-bold font-mono" id="displayDeviceId">-</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Container -->
+      <div class="bg-white rounded-2xl p-6 shadow-lg space-y-5">
+        <h3 class="text-lg font-bold text-gray-800">📋 Data Lahan</h3>
+
+        <!-- Nama Lahan -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Nama Lahan *</label>
+          <input type="text" id="fieldName" 
+                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                 placeholder="Lahan Cabai Belakang Rumah"
+                 required>
+        </div>
+
+        <!-- Jenis Tanaman -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Jenis Tanaman *</label>
+          <select id="plantType" 
+                  class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
+            <option value="">Pilih jenis tanaman</option>
+            <option value="cabai">🌶️ Cabai</option>
+            <option value="tomat">🍅 Tomat</option>
+            <option value="terong">🍆 Terong</option>
+            <option value="sawi">🥬 Sawi</option>
+            <option value="kangkung">🥬 Kangkung</option>
+            <option value="bayam">🥬 Bayam</option>
+            <option value="selada">🥗 Selada</option>
+            <option value="timun">🥒 Timun</option>
+            <option value="jagung">🌽 Jagung</option>
+            <option value="padi">🌾 Padi</option>
+            <option value="lainnya">🌱 Lainnya</option>
+          </select>
+        </div>
+
+        <!-- Luas Lahan -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Luas Lahan (m²)</label>
+          <input type="number" id="fieldArea" 
+                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                 placeholder="100"
+                 min="1"
+                 step="0.1">
+        </div>
+
+        <!-- Lokasi -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Lokasi (Opsional)</label>
+          <input type="text" id="location" 
+                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                 placeholder="Bekasi, Jawa Barat">
+        </div>
+      </div>
+
+      <!-- Threshold Settings -->
+      <div class="bg-white rounded-2xl p-6 shadow-lg space-y-5">
+        <h3 class="text-lg font-bold text-gray-800">⚙️ Pengaturan Irigasi Otomatis</h3>
+        
+        <div class="bg-blue-50 rounded-xl p-4">
+          <p class="text-xs text-blue-800">
+            💡 <strong>Tips:</strong> Pompa akan menyala otomatis jika kelembapan tanah di bawah nilai minimal, dan mati jika sudah mencapai nilai maksimal.
+          </p>
+        </div>
+
+        <!-- Threshold Min -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Kelembapan Minimal (%) *</label>
+          <input type="number" id="thresholdMin" 
+                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition text-lg font-bold text-center"
+                 placeholder="35"
+                 min="0"
+                 max="100"
+                 value="35"
+                 required>
+          <p class="text-xs text-gray-500 mt-1">Pompa menyala jika kelembapan &lt; nilai ini</p>
+        </div>
+
+        <!-- Threshold Max -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Kelembapan Maksimal (%) *</label>
+          <input type="number" id="thresholdMax" 
+                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition text-lg font-bold text-center"
+                 placeholder="75"
+                 min="0"
+                 max="100"
+                 value="75"
+                 required>
+          <p class="text-xs text-gray-500 mt-1">Pompa mati jika kelembapan &gt; nilai ini</p>
+        </div>
+      </div>
+
+      <!-- WiFi Configuration -->
+      <div class="bg-white rounded-2xl p-6 shadow-lg space-y-5">
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+          </svg>
+          <h3 class="text-lg font-bold text-gray-800">🔐 Konfigurasi WiFi</h3>
+        </div>
+        
+        <div class="bg-yellow-50 rounded-xl p-4">
+          <p class="text-xs text-yellow-800">
+            ⚠️ <strong>Penting:</strong> Perangkat akan terhubung ke WiFi ini untuk mengirim data sensor ke cloud.
+          </p>
+        </div>
+
+        <!-- WiFi SSID -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Nama WiFi (SSID) *</label>
+          <input type="text" id="wifiSSID" 
+                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                 placeholder="WiFi_Rumah"
+                 required>
+        </div>
+
+        <!-- WiFi Password -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-800 mb-2">Password WiFi *</label>
+          <div class="relative">
+            <input type="password" id="wifiPassword" 
+                   class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition pr-12"
+                   placeholder="••••••••"
+                   required>
+            <button type="button" onclick="toggleWiFiPassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <svg id="wifiEyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">🔒 Password akan dienkripsi untuk keamanan</p>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button onclick="saveDevice()" class="w-full py-4 bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+        Simpan
+      </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-3xl p-8 text-center max-w-sm mx-4 shadow-2xl">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+        <p class="text-gray-800 font-bold text-lg mb-2">Menyimpan Perangkat...</p>
+        <p class="text-gray-500 text-sm">Mohon tunggu sebentar</p>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 px-6">
+      <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center animate-bounce-in">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+          <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-3">🎉 Berhasil!</h3>
+        <p class="text-gray-600 mb-6">
+          Perangkat SmartFarm Anda telah terhubung dan siap digunakan untuk monitoring lahan.
+        </p>
+        <button onclick="goToDashboard()" class="w-full py-3 px-6 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition mb-3">
+          Lihat Dashboard
+        </button>
+        <button onclick="addAnotherDevice()" class="w-full py-3 px-6 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary/5 transition">
+          + Tambah Perangkat Lain
+        </button>
+      </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+
+    <script>
+      let currentUser = null;
+      let deviceId = null;
+
+      // Get device ID from URL parameter
+      window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        deviceId = urlParams.get('deviceId');
+        
+        if (!deviceId) {
+          alert('Device ID tidak ditemukan!');
+          window.location.href = 'add-device.html';
+          return;
+        }
+
+        document.getElementById('displayDeviceId').textContent = deviceId;
+
+        // Check auth
+        firebase.auth().onAuthStateChanged((user) => {
+          if (!user) {
+            alert('Anda harus login terlebih dahulu!');
+            window.location.href = '/auth/login.html';
+          } else {
+            currentUser = user;
+            console.log('✅ User loaded:', user.email);
+          }
+        });
+      });
+
+      // Toggle WiFi password visibility
+      function toggleWiFiPassword() {
+        const passwordInput = document.getElementById('wifiPassword');
+        const eyeIcon = document.getElementById('wifiEyeIcon');
+        
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          eyeIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+          `;
+        } else {
+          passwordInput.type = 'password';
+          eyeIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          `;
+        }
+      }
+
+      // Save device to Firebase
+      async function saveDevice() {
+        if (!currentUser) {
+          alert('User tidak ditemukan! Silakan login ulang.');
+          window.location.href = '/auth/login.html';
+          return;
+        }
+
+        const fieldName = document.getElementById('fieldName').value.trim();
+        const plantType = document.getElementById('plantType').value;
+        const fieldArea = document.getElementById('fieldArea').value;
+        const location = document.getElementById('location').value.trim();
+        const thresholdMin = parseInt(document.getElementById('thresholdMin').value);
+        const thresholdMax = parseInt(document.getElementById('thresholdMax').value);
+        const wifiSSID = document.getElementById('wifiSSID').value.trim();
+        const wifiPassword = document.getElementById('wifiPassword').value;
+
+        // Validation
+        if (!fieldName) {
+          alert('❌ Nama lahan harus diisi!');
+          return;
+        }
+
+        if (!plantType) {
+          alert('❌ Jenis tanaman harus dipilih!');
+          return;
+        }
+
+        if (thresholdMin >= thresholdMax) {
+          alert('❌ Threshold minimal harus lebih kecil dari threshold maksimal!');
+          return;
+        }
+
+        if (!wifiSSID || !wifiPassword) {
+          alert('❌ WiFi SSID dan Password harus diisi!');
+          return;
+        }
+
+        // Show loading
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.getElementById('loadingOverlay').classList.add('flex');
+
+        try {
+          const database = firebase.database();
+          
+          // Check if device already exists
+          const deviceRef = database.ref('devices/' + deviceId);
+          const snapshot = await deviceRef.once('value');
+          
+          if (snapshot.exists()) {
+            const existingDevice = snapshot.val();
+            if (existingDevice.info && existingDevice.info.owner_id && existingDevice.info.owner_id !== currentUser.uid) {
+              throw new Error('Device sudah terdaftar oleh user lain!');
+            }
+          }
+
+          // Save device data
+          await deviceRef.set({
+            info: {
+              owner_id: currentUser.uid,
+              owner_email: currentUser.email,
+              nama_lahan: fieldName,
+              jenis_tanaman: plantType,
+              luas_lahan: fieldArea ? parseFloat(fieldArea) : 0,
+              lokasi: location || '',
+              created_at: firebase.database.ServerValue.TIMESTAMP,
+              updated_at: firebase.database.ServerValue.TIMESTAMP
+            },
+            current: {
+              kelembapan_tanah: 0,
+              suhu: 0,
+              kelembapan_udara: 0,
+              intensitas_cahaya: 0,
+              status_pompa: 'OFF',
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            },
+            settings: {
+              mode_otomatis: true,
+              threshold_min: thresholdMin,
+              threshold_max: thresholdMax,
+              durasi_pompa: 300,
+              wifi_ssid: wifiSSID,
+              wifi_password: btoa(wifiPassword)
+            },
+            status: 'offline'
+          });
+
+          // Add device to user's device list
+          await database.ref('users/' + currentUser.uid + '/devices/' + deviceId).set(true);
+
+          console.log('✅ Device saved successfully');
+
+          // Hide loading
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          document.getElementById('loadingOverlay').classList.remove('flex');
+
+          // Show success modal
+          document.getElementById('successModal').classList.remove('hidden');
+          document.getElementById('successModal').classList.add('flex');
+
+        } catch (error) {
+          console.error('❌ Error saving device:', error);
+          
+          // Hide loading
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          document.getElementById('loadingOverlay').classList.remove('flex');
+
+          let errorMessage = 'Gagal menyimpan perangkat!';
+          
+          if (error.message.includes('sudah terdaftar')) {
+            errorMessage = error.message;
+          } else if (error.code === 'PERMISSION_DENIED') {
+            errorMessage = 'Tidak memiliki izin untuk menambahkan perangkat. Periksa Firebase Database Rules.';
+          }
+
+          alert(errorMessage + '\n\nDetail: ' + error.message);
+        }
+      }
+
+      // Navigation
+      function goBack() {
+        if (confirm('Data yang belum disimpan akan hilang. Yakin ingin kembali?')) {
+          window.location.href = 'add-device.html';
+        }
+      }
+
+      function goToDashboard() {
+        window.location.href = 'monitoring.html';
+      }
+
+      function addAnotherDevice() {
+        window.location.href = 'add-device.html';
+      }
+    </script>
+</body>
+</html>

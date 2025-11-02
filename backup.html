@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tambah Perangkat - Greenuity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1B4D57",
+            },
+          },
+        },
+      };
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-10 shadow-sm">
+      <div class="flex items-center justify-between">
+        <button onclick="goBack()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1 class="text-lg font-bold">Tambah Perangkat</h1>
+        <div class="w-10"></div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-6 py-8 max-w-md mx-auto">
+      <!-- Tabs -->
+      <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
+        <button onclick="switchTab('scan')" id="tabScan" class="flex-1 py-3 px-4 rounded-xl font-medium text-sm transition bg-white text-primary shadow-sm">
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+            </svg>
+            <span>Scan QR</span>
+          </div>
+        </button>
+        <button onclick="switchTab('manual')" id="tabManual" class="flex-1 py-3 px-4 rounded-xl font-medium text-sm transition text-gray-600">
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <span>Input Manual</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Scan QR Tab Content -->
+      <div id="scanContent" class="space-y-6">
+        <!-- Info Card -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <p class="text-sm text-blue-800 font-medium">Cara Menambahkan Perangkat</p>
+              <p class="text-xs text-blue-700 mt-1">
+                Arahkan kamera ke QR Code yang tertera pada perangkat IoT SmartFarm Anda.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Scanner Container -->
+        <div class="bg-white rounded-3xl overflow-hidden shadow-lg">
+          <!-- Scanner Preview -->
+          <div id="qrReader" class="w-full aspect-square bg-gray-900 relative">
+            <!-- Placeholder sebelum scan -->
+            <div id="scanPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
+              <svg class="w-32 h-32 mb-4 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+              </svg>
+              <p class="text-center text-white/80 text-sm">Klik tombol "Mulai Scan" untuk memulai</p>
+            </div>
+          </div>
+
+          <!-- Scanner Controls -->
+          <div class="p-6 space-y-4">
+            <button onclick="startScanning()" id="startScanBtn" class="w-full py-4 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition shadow-lg">
+              Mulai Scan QR Code
+            </button>
+            <button onclick="stopScanning()" id="stopScanBtn" class="w-full py-4 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition shadow-lg hidden">
+              Berhenti Scan
+            </button>
+          </div>
+        </div>
+
+        <!-- Scan Result (Hidden by default) -->
+        <div id="scanResult" class="hidden bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm text-green-800 font-medium">QR Code Terdeteksi!</p>
+              <p class="text-xs text-green-700 mt-1">Device ID: <span id="scannedDeviceId" class="font-mono font-bold"></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Input Tab Content -->
+      <div id="manualContent" class="hidden space-y-6">
+        <!-- Info Card -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <p class="text-sm text-blue-800 font-medium">Input Manual Device ID</p>
+              <p class="text-xs text-blue-700 mt-1">
+                Masukkan Device ID yang tertera pada stiker perangkat SmartFarm Anda (contoh: SF8266-0012).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual Form -->
+        <form id="manualForm" class="space-y-5">
+          <!-- Device ID -->
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2">Device ID</label>
+            <input type="text" id="manualDeviceId" 
+                   class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white font-mono"
+                   placeholder="SF8266-0012"
+                   pattern="SF[0-9]{4}-[0-9]{4}"
+                   required>
+            <p class="text-xs text-gray-500 mt-1">Format: SF####-#### (contoh: SF8266-0012)</p>
+          </div>
+
+          <!-- Next Button -->
+          <button type="submit" class="w-full py-4 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition shadow-lg hover:shadow-xl">
+            Lanjutkan
+          </button>
+        </form>
+      </div>
+
+      <!-- Device Info Form (Shown after scan/manual input) -->
+      <div id="deviceInfoForm" class="hidden space-y-6 mt-8">
+        <div class="bg-white rounded-3xl p-6 shadow-lg space-y-5">
+          <h3 class="text-lg font-bold text-gray-800 mb-4">Informasi Lahan</h3>
+
+          <!-- Nama Lahan -->
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2">Nama Lahan</label>
+            <input type="text" id="fieldName" 
+                   class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+                   placeholder="Lahan Cabai Belakang Rumah"
+                   required>
+          </div>
+
+          <!-- Jenis Tanaman -->
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2">Jenis Tanaman</label>
+            <select id="plantType" 
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white">
+              <option value="">Pilih jenis tanaman</option>
+              <option value="cabai">🌶️ Cabai</option>
+              <option value="tomat">🍅 Tomat</option>
+              <option value="terong">🍆 Terong</option>
+              <option value="sawi">🥬 Sawi</option>
+              <option value="kangkung">🥬 Kangkung</option>
+              <option value="bayam">🥬 Bayam</option>
+              <option value="selada">🥗 Selada</option>
+              <option value="timun">🥒 Timun</option>
+              <option value="lainnya">🌱 Lainnya</option>
+            </select>
+          </div>
+
+          <!-- Luas Lahan -->
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2">Luas Lahan (m²)</label>
+            <input type="number" id="fieldArea" 
+                   class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+                   placeholder="100"
+                   min="1"
+                   step="0.1">
+          </div>
+
+          <!-- Lokasi (Optional) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-900 mb-2">Lokasi (Opsional)</label>
+            <input type="text" id="location" 
+                   class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+                   placeholder="Bekasi, Jawa Barat">
+          </div>
+
+          <!-- Threshold Settings -->
+          <div class="border-t pt-5 mt-5">
+            <h4 class="text-sm font-bold text-gray-800 mb-4">Pengaturan Irigasi Otomatis</h4>
+            
+            <!-- Threshold Min -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-900 mb-2">Kelembapan Minimal (%)</label>
+              <input type="number" id="thresholdMin" 
+                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+                     placeholder="35"
+                     min="0"
+                     max="100"
+                     value="35">
+              <p class="text-xs text-gray-500 mt-1">Pompa akan menyala jika kelembapan < nilai ini</p>
+            </div>
+
+            <!-- Threshold Max -->
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">Kelembapan Maksimal (%)</label>
+              <input type="number" id="thresholdMax" 
+                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+                     placeholder="75"
+                     min="0"
+                     max="100"
+                     value="75">
+              <p class="text-xs text-gray-500 mt-1">Pompa akan mati jika kelembapan > nilai ini</p>
+            </div>
+          </div>
+
+          <!-- WiFi Configuration Section -->
+          <div class="border-t pt-5 mt-5">
+            <h4 class="text-sm font-bold text-gray-800 mb-4">🔐 Konfigurasi WiFi Perangkat</h4>
+            
+            <!-- WiFi SSID -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-900 mb-2">WiFi SSID</label>
+              <input type="text" id="wifiSSID" 
+                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white"
+                     placeholder="Nama WiFi Rumah Anda"
+                     required>
+              <p class="text-xs text-gray-500 mt-1">Nama WiFi yang akan digunakan perangkat</p>
+            </div>
+
+            <!-- WiFi Password -->
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">WiFi Password</label>
+              <div class="relative">
+                <input type="password" id="wifiPassword" 
+                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition bg-white pr-12"
+                       placeholder="Password WiFi"
+                       required>
+                <button type="button" onclick="toggleWiFiPassword()" class="absolute right-4 top-1/2 -translate-y-1/2">
+                  <svg id="wifiEyeIcon" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">Password akan dienkripsi sebelum dikirim</p>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button onclick="saveDevice()" type="button" class="w-full py-4 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition shadow-lg hover:shadow-xl mt-6">
+            Simpan & Konfigurasi Perangkat
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 text-center max-w-sm mx-4">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+        <p class="text-gray-700 font-medium">Menyimpan perangkat...</p>
+      </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 px-6">
+      <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-3">Perangkat Berhasil Ditambahkan!</h3>
+        <p class="text-gray-600 mb-6">
+          Perangkat SmartFarm Anda telah terhubung dan siap digunakan.
+        </p>
+        <button onclick="goToDashboard()" class="w-full py-3 px-6 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition mb-3">
+          Lihat Dashboard
+        </button>
+        <button onclick="addAnotherDevice()" class="w-full py-3 px-6 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary/5 transition">
+          Tambah Perangkat Lain
+        </button>
+      </div>
+    </div>
+
+    <!-- Firebase SDK (TANPA Storage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="/js/config/firebase-config.js"></script>
+
+    <!-- Auth Guard -->
+    <script src="/components/authGuard.js"></script>
+
+    <script>
+      let currentUser = null;
+      let detectedDeviceId = null;
+      let html5QrcodeScanner = null;
+
+      // Load user when page loads
+      window.addEventListener('DOMContentLoaded', () => {
+        const checkAuthGuard = setInterval(() => {
+          if (typeof authGuard === 'function') {
+            clearInterval(checkAuthGuard);
+            
+            authGuard()
+              .then((user) => {
+                currentUser = user;
+                console.log('✅ User loaded:', user.email);
+              })
+              .catch((err) => {
+                console.error('❌ Auth error:', err);
+              });
+          }
+        }, 100);
+
+        setTimeout(() => clearInterval(checkAuthGuard), 5000);
+      });
+
+      // Switch between tabs
+      function switchTab(tab) {
+        const scanTab = document.getElementById('tabScan');
+        const manualTab = document.getElementById('tabManual');
+        const scanContent = document.getElementById('scanContent');
+        const manualContent = document.getElementById('manualContent');
+
+        if (tab === 'scan') {
+          scanTab.className = 'flex-1 py-3 px-4 rounded-xl font-medium text-sm transition bg-white text-primary shadow-sm';
+          manualTab.className = 'flex-1 py-3 px-4 rounded-xl font-medium text-sm transition text-gray-600';
+          scanContent.classList.remove('hidden');
+          manualContent.classList.add('hidden');
+        } else {
+          manualTab.className = 'flex-1 py-3 px-4 rounded-xl font-medium text-sm transition bg-white text-primary shadow-sm';
+          scanTab.className = 'flex-1 py-3 px-4 rounded-xl font-medium text-sm transition text-gray-600';
+          manualContent.classList.remove('hidden');
+          scanContent.classList.add('hidden');
+          stopScanning();
+        }
+      }
+
+      // Start QR Code scanning
+      function startScanning() {
+        const startBtn = document.getElementById('startScanBtn');
+        const stopBtn = document.getElementById('stopScanBtn');
+        const placeholder = document.getElementById('scanPlaceholder');
+
+        startBtn.classList.add('hidden');
+        stopBtn.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+
+        html5QrcodeScanner = new Html5Qrcode("qrReader");
+
+        html5QrcodeScanner.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+          },
+          onScanSuccess,
+          onScanError
+        ).catch(err => {
+          console.error('Error starting scanner:', err);
+          alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
+          stopScanning();
+        });
+      }
+
+      // Stop scanning
+      function stopScanning() {
+        if (html5QrcodeScanner) {
+          html5QrcodeScanner.stop().then(() => {
+            html5QrcodeScanner = null;
+            const startBtn = document.getElementById('startScanBtn');
+            const stopBtn = document.getElementById('stopScanBtn');
+            const placeholder = document.getElementById('scanPlaceholder');
+            
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+          }).catch(err => {
+            console.error('Error stopping scanner:', err);
+          });
+        }
+      }
+
+      // Scan success callback
+      function onScanSuccess(decodedText, decodedResult) {
+        console.log('✅ QR Code detected:', decodedText);
+        
+        // Validate device ID format (SF####-####)
+        const deviceIdPattern = /^SF\d{4}-\d{4}$/;
+        if (!deviceIdPattern.test(decodedText)) {
+          alert('QR Code tidak valid! Format harus: SF####-#### (contoh: SF8266-0012)');
+          return;
+        }
+
+        detectedDeviceId = decodedText;
+        
+        // Show result
+        document.getElementById('scannedDeviceId').textContent = decodedText;
+        document.getElementById('scanResult').classList.remove('hidden');
+        
+        // Stop scanning
+        stopScanning();
+        
+        // Show device info form after 1 second
+        setTimeout(() => {
+          document.getElementById('scanContent').classList.add('hidden');
+          document.getElementById('deviceInfoForm').classList.remove('hidden');
+        }, 1500);
+      }
+
+      // Scan error callback
+      function onScanError(errorMessage) {
+        // Ignore frequent scan errors
+      }
+
+      // Manual form submit
+      document.getElementById('manualForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const deviceId = document.getElementById('manualDeviceId').value.toUpperCase();
+        detectedDeviceId = deviceId;
+        
+        console.log('✅ Manual device ID:', deviceId);
+        
+        // Show device info form
+        document.getElementById('manualContent').classList.add('hidden');
+        document.getElementById('deviceInfoForm').classList.remove('hidden');
+      });
+
+      // Save device to Firebase
+      async function saveDevice() {
+        if (!currentUser) {
+          alert('User tidak ditemukan! Silakan login ulang.');
+          window.location.href = '/auth/login.html';
+          return;
+        }
+
+        if (!detectedDeviceId) {
+          alert('Device ID tidak ditemukan!');
+          return;
+        }
+
+        const fieldName = document.getElementById('fieldName').value.trim();
+        const plantType = document.getElementById('plantType').value;
+        const fieldArea = document.getElementById('fieldArea').value;
+        const location = document.getElementById('location').value.trim();
+        const thresholdMin = parseInt(document.getElementById('thresholdMin').value);
+        const thresholdMax = parseInt(document.getElementById('thresholdMax').value);
+
+        // Validation
+        if (!fieldName) {
+          alert('Nama lahan harus diisi!');
+          return;
+        }
+
+        if (!plantType) {
+          alert('Jenis tanaman harus dipilih!');
+          return;
+        }
+
+        if (thresholdMin >= thresholdMax) {
+          alert('Threshold minimal harus lebih kecil dari threshold maksimal!');
+          return;
+        }
+
+        // Show loading
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.getElementById('loadingOverlay').classList.add('flex');
+
+        try {
+          const database = firebase.database();
+          
+          // Check if device already exists
+          const deviceRef = database.ref('devices/' + detectedDeviceId);
+          const snapshot = await deviceRef.once('value');
+          
+          if (snapshot.exists()) {
+            const existingDevice = snapshot.val();
+            if (existingDevice.info && existingDevice.info.owner_id && existingDevice.info.owner_id !== currentUser.uid) {
+              throw new Error('Device sudah terdaftar oleh user lain!');
+            }
+          }
+
+          // Save device data
+          await deviceRef.set({
+            info: {
+              owner_id: currentUser.uid,
+              owner_email: currentUser.email,
+              nama_lahan: fieldName,
+              jenis_tanaman: plantType,
+              luas_lahan: fieldArea ? parseFloat(fieldArea) : 0,
+              lokasi: location || '',
+              created_at: firebase.database.ServerValue.TIMESTAMP,
+              updated_at: firebase.database.ServerValue.TIMESTAMP
+            },
+            current: {
+              kelembapan_tanah: 0,
+              suhu: 0,
+              kelembapan_udara: 0,
+              status_pompa: 'OFF',
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            },
+            settings: {
+              mode_otomatis: true,
+              threshold_min: thresholdMin,
+              threshold_max: thresholdMax,
+              durasi_pompa: 300
+            }
+          });
+
+          // Add device to user's device list
+          await database.ref('users/' + currentUser.uid + '/devices/' + detectedDeviceId).set(true);
+
+          console.log('✅ Device saved successfully');
+
+          // Hide loading
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          document.getElementById('loadingOverlay').classList.remove('flex');
+
+          // Show success modal
+          document.getElementById('successModal').classList.remove('hidden');
+          document.getElementById('successModal').classList.add('flex');
+
+        } catch (error) {
+          console.error('❌ Error saving device:', error);
+          
+          // Hide loading
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          document.getElementById('loadingOverlay').classList.remove('flex');
+
+          let errorMessage = 'Gagal menyimpan perangkat!';
+          
+          if (error.message.includes('sudah terdaftar')) {
+            errorMessage = error.message;
+          } else if (error.code === 'PERMISSION_DENIED') {
+            errorMessage = 'Tidak memiliki izin untuk menambahkan perangkat. Periksa Firebase Database Rules.';
+          }
+
+          alert(errorMessage + '\n\nDetail: ' + error.message);
+        }
+      }
+
+      // Navigation functions
+      function goBack() {
+        if (confirm('Data yang belum disimpan akan hilang. Yakin ingin kembali?')) {
+          window.location.href = 'monitoring.html';
+        }
+      }
+
+      function goToDashboard() {
+        window.location.href = '/dashboard/dashboard.html';
+      }
+
+      function addAnotherDevice() {
+        window.location.reload();
+      }
+    </script>
+</body>
+</html>

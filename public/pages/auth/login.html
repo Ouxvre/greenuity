@@ -1,190 +1,307 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Greenuity</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Greenuity</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/../assets/logo/logo-greenuity.svg"
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#173D45" />
 
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Custom color config -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'my-bg': '#173D45',
-            'my-teal': '#1B4D57'
+    <!-- Custom color config -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "my-bg": "#173D45",
+              "my-teal": "#1B4D57",
+            },
           },
         },
-      },
-    }
-  </script>
-</head>
+      };
+    </script>
+  </head>
 
-<body class="bg-my-bg flex items-center justify-center min-h-screen p-4">
-  <div class="w-full max-w-md">
-    <!-- Logo Section -->
-    <div class="text-center mb-8">
-      <img src="../../assets/logo/login_logo.png" alt="Greenuity Logo" class="mx-auto w-[190px] h-[190px] object-contain mb-4">
-    </div>
-
-    <!-- Login/Register Form Card -->
-    <div class="bg-white rounded-3xl shadow-2xl p-8">
-      <!-- Tab Navigation -->
-      <div class="flex bg-gray-100 rounded-full p-1 mb-6">
-        <button 
-          onclick="switchTab('masuk')" 
-          id="tabMasuk"
-          class="flex-1 py-2.5 px-4 rounded-full bg-white text-gray-800 font-medium shadow-sm transition-all">
-          Masuk
-        </button>
-        <button 
-          onclick="switchTab('daftar')" 
-          id="tabDaftar"
-          class="flex-1 py-2.5 px-4 rounded-full text-gray-500 font-medium transition-all hover:text-gray-800">
-          Daftar
-        </button>
+  <body class="bg-my-bg flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md">
+      <!-- Logo Section -->
+      <div class="text-center mb-8">
+        <img
+          src="../../assets/logo/login_logo.png"
+          alt="Greenuity Logo"
+          class="mx-auto w-[190px] h-[190px] object-contain mb-4"
+        />
       </div>
 
-      <!-- Login Form -->
-      <form id="formMasuk" class="space-y-4" onsubmit="handleLogin(event)">
-        <!-- Email Input -->
-        <div class="relative">
-          <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-          </div>
-          <input 
-            type="email" 
-            placeholder="Email Address" 
-            id="loginEmail"
-            required
-            class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+      <!-- Login/Register Form Card -->
+      <div class="bg-white rounded-3xl shadow-2xl p-8">
+        <!-- Tab Navigation -->
+        <div class="flex bg-gray-100 rounded-full p-1 mb-6">
+          <button
+            onclick="switchTab('masuk')"
+            id="tabMasuk"
+            class="flex-1 py-2.5 px-4 rounded-full bg-white text-gray-800 font-medium shadow-sm transition-all"
           >
-        </div>
-
-        <!-- Password Input -->
-        <div class="relative">
-          <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
-          </div>
-          <input 
-            type="password" 
-            placeholder="Password" 
-            id="loginPassword"
-            required
-            class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+            Masuk
+          </button>
+          <button
+            onclick="switchTab('daftar')"
+            id="tabDaftar"
+            class="flex-1 py-2.5 px-4 rounded-full text-gray-500 font-medium transition-all hover:text-gray-800"
           >
-          <button 
-            type="button" 
-            onclick="togglePassword('loginPassword')"
-            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
+            Daftar
           </button>
         </div>
 
-        <!-- Remember Me & Forgot Password -->
-        <div class="flex items-center justify-between text-sm pt-1">
-          <label class="flex items-center cursor-pointer group">
-            <input type="checkbox" class="w-4 h-4 text-my-teal border-gray-300 rounded focus:ring-my-teal cursor-pointer">
-            <span class="ml-2 text-gray-600 group-hover:text-gray-800 transition-colors">Remember Me</span>
-          </label>
-          <a href="#" class="text-gray-600 hover:text-my-teal transition-colors">Forgot Password?</a>
-        </div>
-
-        <!-- Login Button -->
-        <button 
-          type="submit" 
-          class="w-full bg-my-teal text-white py-3.5 rounded-2xl font-medium hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mt-6"
-        >
-          Masuk
-        </button>
-      </form>
-
-      <!-- Register Form -->
-      <form id="formDaftar" class="space-y-4 hidden" onsubmit="handleRegister(event)">
-        <!-- Name Input -->
-        <div class="relative">
-          <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
+        <!-- Login Form -->
+        <form id="formMasuk" class="space-y-4" onsubmit="handleLogin(event)">
+          <!-- Email Input -->
+          <div class="relative">
+            <div
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <input
+              type="email"
+              placeholder="Email Address"
+              id="loginEmail"
+              required
+              class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+            />
           </div>
-          <input 
-            type="text" 
-            placeholder="Nama" 
-            id="registerName"
-            required
-            class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
-          >
-        </div>
 
-        <!-- Email Input -->
-        <div class="relative">
-          <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
+          <!-- Password Input -->
+          <div class="relative">
+            <div
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <input
+              type="password"
+              placeholder="Password"
+              id="loginPassword"
+              required
+              class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+            />
+            <button
+              type="button"
+              onclick="togglePassword('loginPassword')"
+              class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            </button>
           </div>
-          <input 
-            type="email" 
-            placeholder="Email Address" 
-            id="registerEmail"
-            required
-            class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
-          >
-        </div>
 
-        <!-- Password Input -->
-        <div class="relative">
-          <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
+          <!-- Remember Me & Forgot Password -->
+          <div class="flex items-center justify-between text-sm pt-1">
+            <label class="flex items-center cursor-pointer group">
+              <input
+                type="checkbox"
+                class="w-4 h-4 text-my-teal border-gray-300 rounded focus:ring-my-teal cursor-pointer"
+              />
+              <span
+                class="ml-2 text-gray-600 group-hover:text-gray-800 transition-colors"
+                >Remember Me</span
+              >
+            </label>
+            <a
+              href="#"
+              class="text-gray-600 hover:text-my-teal transition-colors"
+              >Forgot Password?</a
+            >
           </div>
-          <input 
-            type="password" 
-            placeholder="Password" 
-            id="registerPassword"
-            required
-            minlength="6"
-            class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+
+          <!-- Login Button -->
+          <button
+            type="submit"
+            class="w-full bg-my-teal text-white py-3.5 rounded-2xl font-medium hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mt-6"
           >
-          <button 
-            type="button" 
-            onclick="togglePassword('registerPassword')"
-            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
+            Masuk
           </button>
-        </div>
+        </form>
 
-        <!-- Register Button -->
-        <button 
-          type="submit" 
-          class="w-full bg-my-teal text-white py-3.5 rounded-2xl font-medium hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mt-6"
+        <!-- Register Form -->
+        <form
+          id="formDaftar"
+          class="space-y-4 hidden"
+          onsubmit="handleRegister(event)"
         >
-          Daftar
-        </button>
-      </form>
+          <!-- Name Input -->
+          <div class="relative">
+            <div
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Nama"
+              id="registerName"
+              required
+              class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+            />
+          </div>
 
-      <!-- Alert Message -->
-      <div id="alertMessage" class="hidden mt-4 p-4 rounded-xl text-sm"></div>
+          <!-- Email Input -->
+          <div class="relative">
+            <div
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <input
+              type="email"
+              placeholder="Email Address"
+              id="registerEmail"
+              required
+              class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+            />
+          </div>
+
+          <!-- Password Input -->
+          <div class="relative">
+            <div
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <input
+              type="password"
+              placeholder="Password"
+              id="registerPassword"
+              required
+              minlength="6"
+              class="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-my-teal focus:border-transparent transition-all"
+            />
+            <button
+              type="button"
+              onclick="togglePassword('registerPassword')"
+              class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Register Button -->
+          <button
+            type="submit"
+            class="w-full bg-my-teal text-white py-3.5 rounded-2xl font-medium hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl mt-6"
+          >
+            Daftar
+          </button>
+        </form>
+
+        <!-- Alert Message -->
+        <div id="alertMessage" class="hidden mt-4 p-4 rounded-xl text-sm"></div>
+      </div>
     </div>
-  </div>
-</body>
+  </body>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>

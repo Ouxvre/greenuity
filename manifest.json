@@ -1,0 +1,22 @@
+{
+  "name": "GreenUnity",
+  "short_name": "GreenUnity",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#17AD45",
+  "description": "Aplikasi Smart Farm Monitoring & Irrigation berbasis IoT",
+  "icons": [
+    {
+      "src": "/public/assets/logo/logo-greenunity.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/public/assets/logo/logo-greenunity.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

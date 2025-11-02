@@ -1,71 +1,98 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Email Terverifikasi - Greenuity</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getAuth, applyActionCode } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Terverifikasi - Greenuity</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/../assets/logo/logo-greenuity.svg"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+      import {
+        getAuth,
+        applyActionCode,
+      } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-    // Konfigurasi Firebase kamu
-    const firebaseConfig = {
-      apiKey: "AIzaSyA5mXAa75PSalxvZLwoF-pCUMTWQIW1-5s",
-      authDomain: "greenuity-id.firebaseapp.com",
-      projectId: "greenuity-id",
-    };
+      // Konfigurasi Firebase kamu
+      const firebaseConfig = {
+        apiKey: "AIzaSyA5mXAa75PSalxvZLwoF-pCUMTWQIW1-5s",
+        authDomain: "greenuity-id.firebaseapp.com",
+        projectId: "greenuity-id",
+      };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
 
-    // Ambil kode verifikasi dari URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const oobCode = urlParams.get("oobCode");
+      // Ambil kode verifikasi dari URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const oobCode = urlParams.get("oobCode");
 
-    async function verifyEmail() {
-      const messageBox = document.getElementById("message");
-      try {
-        await applyActionCode(auth, oobCode);
-        messageBox.innerHTML = `
+      async function verifyEmail() {
+        const messageBox = document.getElementById("message");
+        try {
+          await applyActionCode(auth, oobCode);
+          messageBox.innerHTML = `
           <h1 class="text-2xl font-semibold mb-2">Email Kamu Sudah Terverifikasi!</h1>
           <p class="text-sm text-emerald-100">Terima kasih telah memverifikasi akunmu.<br>Kamu akan diarahkan ke halaman login...</p>
         `;
-        setTimeout(() => {
-          window.location.href = "../auth/login.html";
-        }, 4000);
-      } catch (error) {
-        console.error("Verifikasi gagal:", error);
-        messageBox.innerHTML = `
+          setTimeout(() => {
+            window.location.href = "../auth/login.html";
+          }, 4000);
+        } catch (error) {
+          console.error("Verifikasi gagal:", error);
+          messageBox.innerHTML = `
           <h1 class="text-2xl font-semibold mb-2 text-red-400">Verifikasi Gagal!</h1>
           <p class="text-sm text-red-200">Kode verifikasi tidak valid atau sudah digunakan.<br>Silakan minta email verifikasi baru.</p>
           <a href="../auth/login.html" class="underline text-white mt-4 inline-block">Kembali ke Login</a>
         `;
+        }
       }
-    }
 
-    verifyEmail();
-  </script>
-</head>
-<body class="bg-gradient-to-b from-emerald-600 to-emerald-800 min-h-screen flex items-center justify-center text-white font-sans">
-  <div class="flex flex-col items-center text-center space-y-6 animate-fade-in" id="message">
-    <h1 class="text-xl font-semibold">Memverifikasi email kamu...</h1>
-    <div class="w-48 h-2 bg-white/30 rounded-full overflow-hidden">
-      <div class="h-full bg-white animate-progress"></div>
+      verifyEmail();
+    </script>
+  </head>
+  <body
+    class="bg-gradient-to-b from-emerald-600 to-emerald-800 min-h-screen flex items-center justify-center text-white font-sans"
+  >
+    <div
+      class="flex flex-col items-center text-center space-y-6 animate-fade-in"
+      id="message"
+    >
+      <h1 class="text-xl font-semibold">Memverifikasi email kamu...</h1>
+      <div class="w-48 h-2 bg-white/30 rounded-full overflow-hidden">
+        <div class="h-full bg-white animate-progress"></div>
+      </div>
     </div>
-  </div>
 
-  <style>
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in { animation: fade-in 1s ease-out forwards; }
-    @keyframes progress {
-      from { width: 0%; }
-      to { width: 100%; }
-    }
-    .animate-progress { animation: progress 4s linear forwards; }
-  </style>
-</body>
+    <style>
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in {
+        animation: fade-in 1s ease-out forwards;
+      }
+      @keyframes progress {
+        from {
+          width: 0%;
+        }
+        to {
+          width: 100%;
+        }
+      }
+      .animate-progress {
+        animation: progress 4s linear forwards;
+      }
+    </style>
+  </body>
 </html>
