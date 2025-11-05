@@ -185,9 +185,17 @@
           </button>
 
           <button class="flex flex-col items-center space-y-1 text-primary">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <svg
+              class="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
-                d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
               />
             </svg>
             <span class="text-[10px] font-semibold">Monitoring</span>
@@ -398,7 +406,7 @@
 
       // Navigation
       function goToHome() {
-        window.location.href = "dashboard.html";
+        window.location.href = "/pages/dashboard/dashboard.html";
       }
 
       function goToIrrigation() {
