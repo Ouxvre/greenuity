@@ -27,7 +27,7 @@
 // ═══════════════════════════════════════
 // DEVICE CONFIGURATION
 // ═══════════════════════════════════════
-#define DEVICE_ID "SF8266-0001"
+#define DEVICE_ID "Greenuity-001"
 
 // Firebase Config
 #define FIREBASE_HOST "greenuity-id-default-rtdb.asia-southeast1.firebasedatabase.app"
@@ -44,7 +44,7 @@ const int SOIL_WET = 1000;
 const int SOIL_DRY = 3200;
 
 // Timing
-const long SEND_INTERVAL = 10000;  // 10 detik
+const long SEND_INTERVAL = 15000;  // 15 detik
 const long CHECK_INTERVAL = 5000;  // 5 detik untuk cek pompa
 
 // ═══════════════════════════════════════
@@ -153,48 +153,96 @@ void setup() {
 // ═══════════════════════════════════════
 // MAIN LOOP
 // ═══════════════════════════════════════
+
 void loop() {
-  // Check WiFi Connection
+  // 🔹 1) Cek koneksi WiFi
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("⚠️  WiFi terputus! Reconnecting...");
+    Serial.println("⚠️ WiFi terputus! Menandai status offline di Firebase...");
+
+    // Coba update status offline jika Firebase masih ready (kadang belum karena koneksi putus)
+    if (Firebase.ready()) {
+      if (Firebase.RTDB.setString(
+            &fbdo,
+            ("/devices/" + String(DEVICE_ID) + "/info/status").c_str(),
+            "offline")) {
+        Serial.println("   ✔️ Status set to OFFLINE in Firebase");
+      } else {
+        Serial.println("   ❌ Gagal set OFFLINE: " + fbdo.errorReason());
+      }
+      // Simpan last_seen (opsional)
+      Firebase.RTDB.setInt(
+        &fbdo,
+        ("/devices/" + String(DEVICE_ID) + "/info/last_seen").c_str(),
+        millis()
+      );
+    } else {
+      Serial.println("   ℹ️ Firebase not ready — skip writing OFFLINE (will rely on last_seen heartbeat)");
+    }
+
+    // Tandai koneksi terputus & coba reconnect WiFi
     isConnected = false;
+    Serial.println("🔄 Mencoba reconnect WiFi...");
     WiFi.reconnect();
     delay(5000);
     return;
-  } else if (!isConnected) {
+  }
+  // Jika wifi connected tapi sebelumnya isConnected==false -> reconnect event
+  else if (!isConnected) {
     Serial.println("✅ WiFi reconnected!");
     isConnected = true;
+
+    // set ONLINE only jika Firebase siap
+    if (Firebase.ready()) {
+      if (Firebase.RTDB.setString(
+            &fbdo,
+            ("/devices/" + String(DEVICE_ID) + "/info/status").c_str(),
+            "online")) {
+        Serial.println("   ✔️ Status set to ONLINE in Firebase");
+      } else {
+        Serial.println("   ❌ Gagal set ONLINE: " + fbdo.errorReason());
+      }
+      Firebase.RTDB.setInt(
+        &fbdo,
+        ("/devices/" + String(DEVICE_ID) + "/info/last_seen").c_str(),
+        millis()
+      );
+    } else {
+      Serial.println("   ℹ️ Firebase not ready right after reconnect. setupFirebase() will run next.");
+    }
   }
 
+  // 🔹 2) Pastikan Firebase siap (jika tidak, coba re-init)
   if (!Firebase.ready()) {
-    Serial.println("♻️ Reinitializing Firebase...");
+    Serial.println("♻️ Firebase not ready, reinitializing...");
     setupFirebase();
     if (isProvisioned) setupPumpListener();
+    delay(1000);  // waktu singkat agar koneksi stabil
   }
 
-  // Read Sensors
+  // 🔹 3) Baca sensor
   readSensors();
 
-  // Auto Irrigation Check (every 5 seconds)
+  // 🔹 4) Auto-irigasi tiap CHECK_INTERVAL
   if (isProvisioned && millis() - lastCheckTime >= CHECK_INTERVAL) {
     checkAutoIrrigation();
     checkPumpTimer();
     lastCheckTime = millis();
   }
 
-  // Kirim data ke Firebase tiap 10 detik
+  // 🔹 5) Kirim data ke Firebase tiap SEND_INTERVAL
   if (millis() - lastSendTime >= SEND_INTERVAL) {
     Serial.println("📤 Sending data to Firebase...");
-    sendToFirebase();
+    sendToFirebase();        // di dalam sendToFirebase() sudah mengupdate last_seen & status=online
     lastSendTime = millis();
   }
 
-  // Check Serial Commands
+  // 🔹 6) Cek perintah serial
   checkSerialCommands();
 
   delay(500);
-  yield();
+  yield();  // biar WiFi internal tetap jalan
 }
+
 
 // ═══════════════════════════════════════
 // WIFI SETUP
@@ -204,7 +252,7 @@ void setupWiFi() {
   WiFi.setHostname(DEVICE_ID);
 
   String apName = "SmartFarm-" + String(DEVICE_ID);
-  String apPassword = "smartfarm123";
+  String apPassword = "greenuity123";
 
   wifiManager.setAPCallback([](WiFiManager *myWiFiManager) {
     Serial.println("\n╔══════════════════════════════════════╗");
@@ -212,7 +260,7 @@ void setupWiFi() {
     Serial.println("╚══════════════════════════════════════╝");
     Serial.println("📱 Sambungkan HP ke:");
     Serial.println("   SSID: " + String(myWiFiManager->getConfigPortalSSID()));
-    Serial.println("   Password: smartfarm123");
+    Serial.println("   Password: greenuity123");
     Serial.println("   URL: http://192.168.4.1");
   });
 
@@ -242,7 +290,7 @@ void setupFirebase() {
   // Konfigurasi koneksi database
   config.database_url = FIREBASE_HOST;
   config.signer.tokens.legacy_token = FIREBASE_AUTH;  // pakai secret key dari RTDB
-  config.timeout.serverResponse = 10 * 1000;
+  config.timeout.serverResponse = 20 * 1000;          // timeout 20 detik
 
   // Aktifkan koneksi ulang otomatis
   Firebase.reconnectWiFi(true);
@@ -250,19 +298,28 @@ void setupFirebase() {
   // Inisialisasi Firebase
   Firebase.begin(&config, &auth);
 
-  // Set buffer response (biar gak error kecil)
+  // Set ukuran buffer untuk response agar tidak error
   fbdo.setResponseSize(4096);
 
   // Cek koneksi Firebase
   if (Firebase.ready()) {
     Serial.println("✅ Firebase initialized!\n");
+
+    // ✅ Tambahkan status online & waktu aktif terakhir
+    Firebase.RTDB.setString(&fbdo,
+                            ("/devices/" + String(DEVICE_ID) + "/info/status").c_str(),
+                            "online");
+
+    Firebase.RTDB.setInt(&fbdo,
+                         ("/devices/" + String(DEVICE_ID) + "/info/last_seen").c_str(),
+                         millis());
+
+    Serial.println("📡 Device status set to ONLINE in Firebase!");
   } else {
     Serial.println("❌ Firebase init failed!");
     Serial.println(config.signer.tokens.status);
   }
 }
-
-
 
 void registerUnclaimedDevice() {
   Serial.println("📝 Registering as unclaimed device...");
@@ -595,16 +652,19 @@ void readSensors() {
 void sendToFirebase() {
   Serial.println("🚀 sendToFirebase dipanggil...");
 
+  // 🔸 Cegah pengiriman jika device belum di-provision
   if (!isProvisioned) {
     Serial.println("⚠️ Device belum di-provision, kirim dibatalkan.");
     return;
   }
 
+  // 🔸 Pastikan Firebase siap
   if (!Firebase.ready()) {
     Serial.println("⚠️ Firebase belum siap, skip pengiriman.");
     return;
   }
 
+  // 🔸 Path utama untuk data sensor
   String path = "/devices/" + String(DEVICE_ID) + "/current";
   FirebaseJson json;
 
@@ -614,25 +674,46 @@ void sendToFirebase() {
   json.set("kelembapan_udara", kelembapanUdara);
   json.set("intensitas_cahaya", intensitasCahaya);
   json.set("status_pompa", pompaMenyala ? "ON" : "OFF");
+
+  // Gunakan timestamp dari server Firebase, bukan dari board
   json.set("timestamp/.sv", "timestamp");
 
-  Serial.println("📡 Mengirim data ke Firebase...");
+  Serial.println("📡 Mengirim data sensor ke Firebase...");
 
-  // Proses update data
+  // 🔹 Proses kirim data sensor
   if (Firebase.RTDB.updateNode(&fbdo, path.c_str(), &json)) {
     Serial.println("✅ Data sent to Firebase!");
   } else {
     Serial.println("❌ Failed to send data!");
     Serial.print("🧩 Error: ");
     Serial.println(fbdo.errorReason());
+
+    // Jika gagal kirim data sensor, jangan lanjut
+    return;
   }
 
-  // Update info device
+  // 🔹 Update status perangkat
   if (Firebase.ready()) {
-    Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/info/status").c_str(), "online");
-    Firebase.RTDB.setInt(&fbdo, ("/devices/" + String(DEVICE_ID) + "/info/rssi").c_str(), WiFi.RSSI());
-    Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/info/ip_address").c_str(), WiFi.localIP().toString());
+    FirebaseJson infoJson;
+    infoJson.set("status", "online");
+    infoJson.set("rssi", WiFi.RSSI());
+    infoJson.set("ip_address", WiFi.localIP().toString());
+    infoJson.set("last_seen/.sv", "timestamp"); // server timestamp
+
+    String infoPath = "/devices/" + String(DEVICE_ID) + "/info";
+    if (Firebase.RTDB.updateNode(&fbdo, infoPath.c_str(), &infoJson)) {
+      Serial.println("📡 Device info updated (status + last_seen).");
+    } else {
+      Serial.println("⚠️ Gagal update info: " + fbdo.errorReason());
+    }
   }
+
+  // 🔹 Debug tambahan untuk verifikasi data sensor
+  Serial.printf(
+    "📊 [DEBUG] Suhu: %.1f°C | Kelembapan Udara: %.1f%% | Tanah: %d%% | Cahaya: %.0f lx | Pompa: %s\n",
+    suhu, kelembapanUdara, soilMoisture, intensitasCahaya,
+    pompaMenyala ? "ON" : "OFF"
+  );
 }
 
 
