@@ -1,5 +1,5 @@
 /*
- * SmartFarm IoT - ESP32 Code (Complete with Pump Control)
+ * SmartFarm IoT - ESP32 Code (Updated for Latest Libraries)
  * 
  * Fitur Lengkap:
  * ✅ Auto provisioning via WiFiManager + Firebase
@@ -15,7 +15,9 @@
 
 #include <WiFi.h>
 #include <WiFiManager.h>
-#include <FirebaseESP32.h>
+#include <Firebase_ESP_Client.h>
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
 #include <Preferences.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
@@ -38,8 +40,8 @@
 #define DHT_TYPE DHT22
 
 // Kalibrasi Soil Sensor
-const int SOIL_WET = 1200;
-const int SOIL_DRY = 3000;
+const int SOIL_WET = 1000;
+const int SOIL_DRY = 3200;
 
 // Timing
 const long SEND_INTERVAL = 10000;  // 10 detik
@@ -48,11 +50,11 @@ const long CHECK_INTERVAL = 5000;  // 5 detik untuk cek pompa
 // ═══════════════════════════════════════
 // GLOBAL OBJECTS & VARIABLES
 // ═══════════════════════════════════════
-FirebaseData firebaseData;
+FirebaseData fbdo;
 FirebaseData configStream;
 FirebaseData pumpStream;
-FirebaseAuth firebaseAuth;
-FirebaseConfig firebaseConfig;
+FirebaseAuth auth;
+FirebaseConfig config;
 
 Preferences preferences;
 WiFiManager wifiManager;
@@ -87,6 +89,7 @@ unsigned long lastCheckTime = 0;
 // ═══════════════════════════════════════
 // SETUP
 // ═══════════════════════════════════════
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -118,28 +121,34 @@ void setup() {
   }
 
   // Connect WiFi
+  WiFi.mode(WIFI_STA);
   setupWiFi();
-  
+
   // Setup Firebase
   setupFirebase();
+
+  // 🔍 Tambahkan di sini (langkah penting)
+  checkProvisionStatus();
 
   // Register atau Load Config
   if (!isProvisioned) {
     registerUnclaimedDevice();
     Serial.println("⏳ Menunggu konfigurasi dari user...");
   } else {
+    Serial.println("✅ Device sudah di-provision sebelumnya!");
     loadSettings();
   }
 
   // Setup Listeners
   setupConfigListener();
-  
+
   if (isProvisioned) {
     setupPumpListener();
   }
 
   Serial.println("\n✅ Setup Complete!\n");
 }
+
 
 // ═══════════════════════════════════════
 // MAIN LOOP
@@ -157,6 +166,12 @@ void loop() {
     isConnected = true;
   }
 
+  if (!Firebase.ready()) {
+    Serial.println("♻️ Reinitializing Firebase...");
+    setupFirebase();
+    if (isProvisioned) setupPumpListener();
+  }
+
   // Read Sensors
   readSensors();
 
@@ -167,8 +182,9 @@ void loop() {
     lastCheckTime = millis();
   }
 
-  // Send Data to Firebase (every 10 seconds)
-  if (isProvisioned && millis() - lastSendTime >= SEND_INTERVAL) {
+  // Kirim data ke Firebase tiap 10 detik
+  if (millis() - lastSendTime >= SEND_INTERVAL) {
+    Serial.println("📤 Sending data to Firebase...");
     sendToFirebase();
     lastSendTime = millis();
   }
@@ -176,7 +192,8 @@ void loop() {
   // Check Serial Commands
   checkSerialCommands();
 
-  delay(1000);
+  delay(500);
+  yield();
 }
 
 // ═══════════════════════════════════════
@@ -222,19 +239,30 @@ void setupWiFi() {
 void setupFirebase() {
   Serial.println("🔥 Setting up Firebase...");
 
-  firebaseConfig.host = FIREBASE_HOST;
-  firebaseConfig.signer.tokens.legacy_token = FIREBASE_AUTH;
-  firebaseConfig.timeout.serverResponse = 10 * 1000;
+  // Konfigurasi koneksi database
+  config.database_url = FIREBASE_HOST;
+  config.signer.tokens.legacy_token = FIREBASE_AUTH;  // pakai secret key dari RTDB
+  config.timeout.serverResponse = 10 * 1000;
 
-  Firebase.begin(&firebaseConfig, &firebaseAuth);
+  // Aktifkan koneksi ulang otomatis
   Firebase.reconnectWiFi(true);
 
-  firebaseData.setBSSLBufferSize(1024, 1024);
-  configStream.setBSSLBufferSize(512, 512);
-  pumpStream.setBSSLBufferSize(512, 512);
+  // Inisialisasi Firebase
+  Firebase.begin(&config, &auth);
 
-  Serial.println("✅ Firebase initialized!\n");
+  // Set buffer response (biar gak error kecil)
+  fbdo.setResponseSize(4096);
+
+  // Cek koneksi Firebase
+  if (Firebase.ready()) {
+    Serial.println("✅ Firebase initialized!\n");
+  } else {
+    Serial.println("❌ Firebase init failed!");
+    Serial.println(config.signer.tokens.status);
+  }
 }
+
+
 
 void registerUnclaimedDevice() {
   Serial.println("📝 Registering as unclaimed device...");
@@ -248,11 +276,11 @@ void registerUnclaimedDevice() {
   json.set("ip_address", WiFi.localIP().toString());
   json.set("rssi", WiFi.RSSI());
 
-  if (Firebase.updateNode(firebaseData, path, json)) {
+  if (Firebase.RTDB.updateNode(&fbdo, path.c_str(), &json)) {
     Serial.println("✅ Device registered!");
   } else {
     Serial.println("❌ Failed to register!");
-    Serial.println("   Error: " + firebaseData.errorReason());
+    Serial.println("   Error: " + fbdo.errorReason());
   }
 }
 
@@ -262,26 +290,28 @@ void registerUnclaimedDevice() {
 void setupConfigListener() {
   String path = "/pending_config/" + String(DEVICE_ID);
   Serial.println("👂 Listening for config changes...");
-  
-  if (!Firebase.beginStream(configStream, path)) {
+
+  if (!Firebase.RTDB.beginStream(&configStream, path.c_str())) {
     Serial.println("❌ Failed to start config stream!");
     return;
   }
-  
-  Firebase.setStreamCallback(configStream, onConfigChange, onStreamTimeout);
+
+  Firebase.RTDB.setStreamCallback(&configStream, onConfigChange, onStreamTimeout);
   Serial.println("✅ Config listener active!");
 }
 
-void onConfigChange(StreamData data) {
+void onConfigChange(FirebaseStream data) {
   if (data.dataType() == "json") {
-    FirebaseJson *json = data.jsonObjectPtr();
+    FirebaseJson json;
+    json.setJsonData(data.jsonString());
+
     FirebaseJsonData result;
     String newSSID = "", newPassword = "", newOwnerID = "", status = "";
 
-    if (json->get(result, "wifi_ssid")) newSSID = result.stringValue;
-    if (json->get(result, "wifi_password")) newPassword = result.stringValue;
-    if (json->get(result, "owner_id")) newOwnerID = result.stringValue;
-    if (json->get(result, "status")) status = result.stringValue;
+    if (json.get(result, "wifi_ssid")) newSSID = result.to<String>();
+    if (json.get(result, "wifi_password")) newPassword = result.to<String>();
+    if (json.get(result, "owner_id")) newOwnerID = result.to<String>();
+    if (json.get(result, "status")) status = result.to<String>();
 
     if (status == "pending" && newSSID.length() > 0) {
       Serial.println("\n🎯 New config received!");
@@ -302,9 +332,9 @@ void onStreamTimeout(bool timeout) {
 // ═══════════════════════════════════════
 void applyNewConfig(String ssid, String password, String owner) {
   Serial.println("🔧 Applying new configuration...");
-  
+
   String configPath = "/pending_config/" + String(DEVICE_ID) + "/status";
-  Firebase.setString(firebaseData, configPath, "applying");
+  Firebase.RTDB.setString(&fbdo, configPath.c_str(), "applying");
 
   preferences.putString("wifi_ssid", ssid);
   preferences.putString("wifi_password", password);
@@ -324,20 +354,20 @@ void applyNewConfig(String ssid, String password, String owner) {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\n✅ Connected to new WiFi!");
-    Firebase.setString(firebaseData, configPath, "connected");
+    Firebase.RTDB.setString(&fbdo, configPath.c_str(), "connected");
     claimDevice(owner);
     isProvisioned = true;
     currentSSID = ssid;
     ownerID = owner;
-    
+
     // Load settings after provisioning
     loadSettings();
     setupPumpListener();
-    
+
     Serial.println("🎉 Provisioning Complete!");
   } else {
     Serial.println("\n❌ Failed to connect!");
-    Firebase.setString(firebaseData, configPath, "connection_failed");
+    Firebase.RTDB.setString(&fbdo, configPath.c_str(), "connection_failed");
     delay(5000);
     ESP.restart();
   }
@@ -345,7 +375,7 @@ void applyNewConfig(String ssid, String password, String owner) {
 
 void claimDevice(String owner) {
   Serial.println("📝 Claiming device...");
-  
+
   String devicePath = "/devices/" + String(DEVICE_ID) + "/info";
   FirebaseJson json;
   json.set("owner_id", owner);
@@ -356,10 +386,24 @@ void claimDevice(String owner) {
   json.set("rssi", WiFi.RSSI());
   json.set("claimed_at/.sv", "timestamp");
 
-  if (Firebase.updateNode(firebaseData, devicePath, json)) {
-    Firebase.deleteNode(firebaseData, "/unclaimed_devices/" + String(DEVICE_ID));
-    Firebase.deleteNode(firebaseData, "/pending_config/" + String(DEVICE_ID));
+  if (Firebase.RTDB.updateNode(&fbdo, devicePath.c_str(), &json)) {
+    Firebase.RTDB.deleteNode(&fbdo, ("/unclaimed_devices/" + String(DEVICE_ID)).c_str());
+    Firebase.RTDB.deleteNode(&fbdo, ("/pending_config/" + String(DEVICE_ID)).c_str());
     Serial.println("✅ Device claimed successfully!");
+  }
+}
+
+void checkProvisionStatus() {
+  String devicePath = "/devices/" + String(DEVICE_ID) + "/info";
+
+  Serial.println("🔍 Checking provisioning status...");
+
+  if (Firebase.RTDB.pathExisted(&fbdo, devicePath.c_str())) {
+    Serial.println("✅ Device sudah terdaftar di /devices!");
+    isProvisioned = true;
+  } else {
+    Serial.println("⚠️ Device belum terdaftar di /devices, masih unclaimed.");
+    isProvisioned = false;
   }
 }
 
@@ -368,26 +412,28 @@ void claimDevice(String owner) {
 // ═══════════════════════════════════════
 void loadSettings() {
   Serial.println("⚙️ Loading settings from Firebase...");
-  
+
   String settingsPath = "/devices/" + String(DEVICE_ID) + "/settings";
-  
-  if (Firebase.getJSON(firebaseData, settingsPath)) {
-    FirebaseJson *json = firebaseData.jsonObjectPtr();
+
+  if (Firebase.RTDB.getJSON(&fbdo, settingsPath.c_str())) {
+    FirebaseJson json;
+    json.setJsonData(fbdo.payload());
+
     FirebaseJsonData result;
-    
-    if (json->get(result, "threshold_min")) {
-      thresholdMin = result.intValue;
+
+    if (json.get(result, "threshold_min")) {
+      thresholdMin = result.to<int>();
     }
-    if (json->get(result, "threshold_max")) {
-      thresholdMax = result.intValue;
+    if (json.get(result, "threshold_max")) {
+      thresholdMax = result.to<int>();
     }
-    if (json->get(result, "mode_otomatis")) {
-      modeOtomatis = result.boolValue;
+    if (json.get(result, "mode_otomatis")) {
+      modeOtomatis = result.to<bool>();
     }
-    if (json->get(result, "durasi_pompa")) {
-      durasiPompa = result.intValue;
+    if (json.get(result, "durasi_pompa")) {
+      durasiPompa = result.to<int>();
     }
-    
+
     Serial.println("✅ Settings loaded!");
     Serial.println("   Threshold: " + String(thresholdMin) + "% - " + String(thresholdMax) + "%");
     Serial.println("   Mode Auto: " + String(modeOtomatis ? "ON" : "OFF"));
@@ -403,31 +449,28 @@ void loadSettings() {
 void setupPumpListener() {
   String path = "/devices/" + String(DEVICE_ID) + "/control/pump_command";
   Serial.println("👂 Listening for pump control...");
-  
-  if (!Firebase.beginStream(pumpStream, path)) {
+
+  if (!Firebase.RTDB.beginStream(&pumpStream, path.c_str())) {
     Serial.println("❌ Failed to start pump listener!");
     return;
   }
-  
-  Firebase.setStreamCallback(pumpStream, onPumpControl, onStreamTimeout);
+
+  Firebase.RTDB.setStreamCallback(&pumpStream, onPumpControl, onStreamTimeout);
   Serial.println("✅ Pump listener active!");
 }
 
-void onPumpControl(StreamData data) {
+void onPumpControl(FirebaseStream data) {
   if (data.dataType() == "string") {
-    String command = data.stringValue();
-    
+    String command = data.to<String>();
     Serial.println("🎮 Manual command received: " + command);
-    
+
     if (command == "ON") {
       turnPumpOn("manual");
-    } 
-    else if (command == "OFF") {
+    } else if (command == "OFF") {
       turnPumpOff("manual");
     }
-    
-    // Clear command after execution
-    Firebase.deleteNode(firebaseData, "/devices/" + String(DEVICE_ID) + "/control/pump_command");
+
+    Firebase.RTDB.deleteNode(&fbdo, ("/devices/" + String(DEVICE_ID) + "/control/pump_command").c_str());
   }
 }
 
@@ -439,16 +482,16 @@ void turnPumpOn(String trigger) {
     Serial.println("⚠️ Pompa sudah menyala!");
     return;
   }
-  
+
   digitalWrite(RELAY_PIN, HIGH);
   pompaMenyala = true;
   pompStartTime = millis();
-  
+
   Serial.println("💧 POMPA ON (" + trigger + ") - Soil: " + String(soilMoisture) + "%");
-  
+
   // Update Firebase
-  Firebase.setString(firebaseData, "/devices/" + String(DEVICE_ID) + "/current/status_pompa", "ON");
-  
+  Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/current/status_pompa").c_str(), "ON");
+
   // Log activity
   logPumpActivity("pump_on", trigger);
 }
@@ -458,16 +501,16 @@ void turnPumpOff(String trigger) {
     Serial.println("⚠️ Pompa sudah mati!");
     return;
   }
-  
+
   digitalWrite(RELAY_PIN, LOW);
   pompaMenyala = false;
-  
+
   unsigned long duration = (millis() - pompStartTime) / 1000;  // in seconds
   Serial.println("🛑 POMPA OFF (" + trigger + ") - Duration: " + String(duration) + "s");
-  
+
   // Update Firebase
-  Firebase.setString(firebaseData, "/devices/" + String(DEVICE_ID) + "/current/status_pompa", "OFF");
-  
+  Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/current/status_pompa").c_str(), "OFF");
+
   // Log activity
   logPumpActivity("pump_off", trigger);
 }
@@ -475,18 +518,18 @@ void turnPumpOff(String trigger) {
 void logPumpActivity(String action, String trigger) {
   String logPath = "/devices/" + String(DEVICE_ID) + "/logs";
   FirebaseJson logJson;
-  
+
   logJson.set("action", action);
   logJson.set("trigger", trigger);
   logJson.set("soil_moisture", soilMoisture);
   logJson.set("timestamp/.sv", "timestamp");
-  
+
   if (pompaMenyala && action == "pump_off") {
     unsigned long duration = (millis() - pompStartTime) / 1000;
     logJson.set("duration", (int)duration);
   }
-  
-  Firebase.pushJSON(firebaseData, logPath, logJson);
+
+  Firebase.RTDB.pushJSON(&fbdo, logPath.c_str(), &logJson);
 }
 
 // ═══════════════════════════════════════
@@ -499,7 +542,7 @@ void checkAutoIrrigation() {
   if (soilMoisture < thresholdMin && !pompaMenyala) {
     turnPumpOn("auto");
   }
-  
+
   // Turn OFF if soil is wet enough
   else if (soilMoisture > thresholdMax && pompaMenyala) {
     turnPumpOff("auto");
@@ -509,9 +552,9 @@ void checkAutoIrrigation() {
 // Check pump timer (auto-off after duration)
 void checkPumpTimer() {
   if (!pompaMenyala) return;
-  
+
   unsigned long elapsedTime = (millis() - pompStartTime) / 1000;
-  
+
   if (elapsedTime >= durasiPompa) {
     Serial.println("⏰ Pump timer reached: " + String(durasiPompa) + "s");
     turnPumpOff("timer");
@@ -522,64 +565,86 @@ void checkPumpTimer() {
 // SENSOR READING
 // ═══════════════════════════════════════
 void readSensors() {
-  // Soil Moisture
+  // Baca kelembapan tanah
   soilRaw = analogRead(SOIL_SENSOR_PIN);
-  soilMoisture = map(soilRaw, SOIL_DRY, SOIL_WET, 0, 100);
+  soilMoisture = map(soilRaw, 4095, 1500, 0, 100);
   soilMoisture = constrain(soilMoisture, 0, 100);
 
-  // DHT22
+  // Baca suhu dan kelembapan udara
   suhu = dht.readTemperature();
   kelembapanUdara = dht.readHumidity();
-  
-  // BH1750
+
+  if (isnan(suhu) || isnan(kelembapanUdara)) {
+    suhu = 0;
+    kelembapanUdara = 0;
+  }
+
+  // Baca intensitas cahaya
   intensitasCahaya = lightMeter.readLightLevel();
+  if (intensitasCahaya < 0) intensitasCahaya = 0;
 
-  // Handle invalid readings
-  if (isnan(suhu)) suhu = 0;
-  if (isnan(kelembapanUdara)) kelembapanUdara = 0;
-
+  // Debug monitor
   Serial.printf("📊 Soil: %d%% | Suhu: %.1f°C | RH: %.1f%% | Light: %.0f lx | Pompa: %s\n",
-                soilMoisture, suhu, kelembapanUdara, intensitasCahaya, pompaMenyala ? "ON" : "OFF");
+                soilMoisture, suhu, kelembapanUdara, intensitasCahaya,
+                pompaMenyala ? "ON" : "OFF");
 }
 
 // ═══════════════════════════════════════
 // SEND DATA TO FIREBASE
 // ═══════════════════════════════════════
 void sendToFirebase() {
-  if (!isProvisioned) return;
+  Serial.println("🚀 sendToFirebase dipanggil...");
+
+  if (!isProvisioned) {
+    Serial.println("⚠️ Device belum di-provision, kirim dibatalkan.");
+    return;
+  }
+
+  if (!Firebase.ready()) {
+    Serial.println("⚠️ Firebase belum siap, skip pengiriman.");
+    return;
+  }
 
   String path = "/devices/" + String(DEVICE_ID) + "/current";
-
   FirebaseJson json;
+
   json.set("kelembapan_tanah", soilMoisture);
   json.set("raw_value", soilRaw);
   json.set("suhu", suhu);
   json.set("kelembapan_udara", kelembapanUdara);
-  json.set("cahaya", intensitasCahaya);
+  json.set("intensitas_cahaya", intensitasCahaya);
   json.set("status_pompa", pompaMenyala ? "ON" : "OFF");
   json.set("timestamp/.sv", "timestamp");
 
-  if (Firebase.updateNode(firebaseData, path, json)) {
-    // Update device info
-    Firebase.setString(firebaseData, "/devices/" + String(DEVICE_ID) + "/info/status", "online");
-    Firebase.setInt(firebaseData, "/devices/" + String(DEVICE_ID) + "/info/rssi", WiFi.RSSI());
-    Firebase.setString(firebaseData, "/devices/" + String(DEVICE_ID) + "/info/ip_address", WiFi.localIP().toString());
-    
+  Serial.println("📡 Mengirim data ke Firebase...");
+
+  // Proses update data
+  if (Firebase.RTDB.updateNode(&fbdo, path.c_str(), &json)) {
     Serial.println("✅ Data sent to Firebase!");
   } else {
     Serial.println("❌ Failed to send data!");
-    Serial.println("   Error: " + firebaseData.errorReason());
+    Serial.print("🧩 Error: ");
+    Serial.println(fbdo.errorReason());
+  }
+
+  // Update info device
+  if (Firebase.ready()) {
+    Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/info/status").c_str(), "online");
+    Firebase.RTDB.setInt(&fbdo, ("/devices/" + String(DEVICE_ID) + "/info/rssi").c_str(), WiFi.RSSI());
+    Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/info/ip_address").c_str(), WiFi.localIP().toString());
   }
 }
+
+
 
 // ═══════════════════════════════════════
 // SERIAL COMMANDS
 // ═══════════════════════════════════════
 void checkSerialCommands() {
   if (!Serial.available()) return;
-  
+
   char cmd = Serial.read();
-  
+
   switch (cmd) {
     case 'r':  // Reset device
       Serial.println("🔄 Resetting device...");
@@ -587,19 +652,19 @@ void checkSerialCommands() {
       wifiManager.resetSettings();
       ESP.restart();
       break;
-      
+
     case 'i':  // Device info
       printDeviceInfo();
       break;
-      
+
     case 's':  // Read sensors
       readSensors();
       break;
-      
+
     case 't':  // Test send
       sendToFirebase();
       break;
-      
+
     case 'p':  // Toggle pump manually
       if (pompaMenyala) {
         turnPumpOff("manual_serial");
@@ -607,22 +672,36 @@ void checkSerialCommands() {
         turnPumpOn("manual_serial");
       }
       break;
-      
+
     case 'd':  // Disconnect WiFi
       Serial.println("📴 Forgetting WiFi & restarting...");
       preferences.clear();
+      preferences.end();
       wifiManager.resetSettings();
       WiFi.disconnect(true, true);
       delay(2000);
       ESP.restart();
       break;
-      
+
     case 'l':  // Reload settings
       loadSettings();
       break;
-      
+
     case 'h':  // Help
       printHelp();
+      break;
+
+    case 'c':  // Calibrate soil sensor
+      Serial.println("🌱 Kalibrasi Soil Sensor");
+      Serial.println("1️⃣ Basahi sensor di tanah lembab, lalu ketik 'w' dan tekan Enter...");
+      while (Serial.read() != 'w') delay(100);
+      Serial.println("   Nilai basah (wet): " + String(analogRead(SOIL_SENSOR_PIN)));
+
+      Serial.println("2️⃣ Sekarang keringkan sensor (biarkan di udara), lalu ketik 'd' dan tekan Enter...");
+      while (Serial.read() != 'd') delay(100);
+      Serial.println("   Nilai kering (dry): " + String(analogRead(SOIL_SENSOR_PIN)));
+
+      Serial.println("✅ Catat dua nilai itu dan masukkan ke dalam variabel SOIL_WET dan SOIL_DRY di atas kode!");
       break;
   }
 }
@@ -634,7 +713,7 @@ void printHeader() {
   Serial.println("\n╔══════════════════════════════════════╗");
   Serial.println("║   SmartFarm IoT - Cloud Ready        ║");
   Serial.println("║   Device: " + String(DEVICE_ID) + "           ║");
-  Serial.println("║   Firmware: v2.0 (Pump Control)      ║");
+  Serial.println("║   Firmware: v2.1 (Updated)           ║");
   Serial.println("╚══════════════════════════════════════╝\n");
 }
 
@@ -661,6 +740,7 @@ void printHelp() {
   Serial.println("p - Toggle pump ON/OFF");
   Serial.println("d - Disconnect WiFi & restart");
   Serial.println("l - Reload settings from Firebase");
+  Serial.println("c - Calibrate soil sensor");
   Serial.println("h - Show this help");
   Serial.println("═══════════════════════════════\n");
 }

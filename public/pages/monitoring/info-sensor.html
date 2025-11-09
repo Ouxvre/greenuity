@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Info Sensor | Greenuity</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="/../assets/logo/logo-greenuity.svg"
+    />
+
+    <!-- TailwindCSS + Chart.js -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1B4D57",
+              "primary-light": "#2D6670",
+              accent: "#E67E22",
+              soft: "#F8FAF8",
+            },
+            fontFamily: { poppins: ["Poppins", "sans-serif"] },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="bg-soft font-poppins min-h-screen">
+    <!-- Header -->
+    <header class="bg-white sticky top-0 shadow-sm z-50">
+      <div class="flex items-center justify-between px-5 py-4">
+        <button
+          onclick="history.back()"
+          class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <h1 class="font-semibold text-lg text-gray-800">Data Sensor</h1>
+        <div class="w-10"></div>
+      </div>
+    </header>
+
+    <!-- Device Info -->
+    <section class="px-6 mt-5 text-center">
+      <div
+        class="bg-gradient-to-r from-primary to-primary-light rounded-3xl text-white py-6 shadow-lg"
+      >
+        <h2 id="deviceName" class="text-xl font-semibold mb-1">Memuat...</h2>
+        <p class="text-sm opacity-90">
+          Device ID: <span id="deviceIdDisplay" class="font-mono"></span>
+        </p>
+        <p class="text-xs opacity-70 mt-2" id="lastActive">
+          Terakhir diperbarui: -
+        </p>
+      </div>
+    </section>
+
+    <!-- Sensor Cards -->
+    <section class="px-6 mt-6 grid grid-cols-2 gap-4">
+      <div class="bg-white rounded-2xl p-5 shadow-md text-center">
+        <p class="text-gray-500 text-sm mb-1">🌡️ Suhu</p>
+        <h3 id="suhu" class="text-2xl font-bold text-primary">-- °C</h3>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-md text-center">
+        <p class="text-gray-500 text-sm mb-1">💧 Kelembapan Udara</p>
+        <h3 id="kelembapan_udara" class="text-2xl font-bold text-primary">
+          -- %
+        </h3>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-md text-center">
+        <p class="text-gray-500 text-sm mb-1">🌱 Kelembapan Tanah</p>
+        <h3 id="kelembapan_tanah" class="text-2xl font-bold text-primary">
+          -- %
+        </h3>
+      </div>
+      <div class="bg-white rounded-2xl p-5 shadow-md text-center">
+        <p class="text-gray-500 text-sm mb-1">☀️ Cahaya</p>
+        <h3 id="cahaya" class="text-2xl font-bold text-primary">-- lux</h3>
+      </div>
+    </section>
+
+    <!-- Grafik -->
+    <section class="px-6 mt-8 mb-20">
+      <div
+        class="bg-white rounded-3xl shadow-lg p-5 relative h-[320px] sm:h-[360px]"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-semibold text-gray-800 text-lg">
+            Grafik Sensor (Realtime)
+          </h2>
+          <span id="updateTime" class="text-xs text-gray-400">Realtime</span>
+        </div>
+        <canvas id="sensorChart" class="w-full h-full"></canvas>
+      </div>
+    </section>
+
+    <!-- AI Insight -->
+    <section class="px-6 mt-8 mb-24">
+      <div
+        id="aiBox"
+        class="bg-gradient-to-br from-primary-light to-primary rounded-3xl text-white p-6 shadow-lg"
+      >
+        <h3 class="text-lg font-semibold mb-2">🧠 Insight Cerdas Greenuity</h3>
+        <p id="aiText" class="text-sm opacity-90 leading-relaxed">
+          Menganalisis data sensor untuk memberikan saran terbaik...
+        </p>
+      </div>
+    </section>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const deviceId = urlParams.get("deviceId");
+      document.getElementById("deviceIdDisplay").textContent = deviceId || "-";
+
+      // Validasi device ID
+      if (!deviceId) {
+        document.getElementById("deviceName").textContent =
+          "Device tidak ditemukan";
+        console.warn("❌ Device ID tidak ditemukan di URL!");
+      } else {
+        // Referensi Realtime Database
+        const dbRef = database.ref("devices/" + deviceId + "/current");
+        const infoRef = database.ref("devices/" + deviceId + "/info");
+
+        // Setup Chart.js
+        const ctx = document.getElementById("sensorChart").getContext("2d");
+        const chartData = {
+          labels: [],
+          datasets: [
+            {
+              label: "Kelembapan Tanah (%)",
+              borderColor: "#1B4D57",
+              backgroundColor: "rgba(27,77,87,0.1)",
+              data: [],
+              tension: 0.4,
+            },
+            {
+              label: "Suhu (°C)",
+              borderColor: "#E67E22",
+              backgroundColor: "rgba(230,126,34,0.1)",
+              data: [],
+              tension: 0.4,
+            },
+            {
+              label: "Kelembapan Udara (%)",
+              borderColor: "#2ECC71",
+              backgroundColor: "rgba(46,204,113,0.1)",
+              data: [],
+              tension: 0.4,
+            },
+          ],
+        };
+
+        const sensorChart = new Chart(ctx, {
+          type: "line",
+          data: chartData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: "#555", font: { size: 12 } } },
+            },
+            scales: {
+              x: {
+                ticks: { color: "#555" },
+                grid: { color: "rgba(0,0,0,0.05)" },
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: "#555" },
+                grid: { color: "rgba(0,0,0,0.05)" },
+              },
+            },
+          },
+        });
+
+        // 🔄 Listener realtime data sensor
+        dbRef.on("value", (snapshot) => {
+          const current = snapshot.val();
+          if (!current) {
+            console.warn(
+              "⚠️ Tidak ada data untuk:",
+              "devices/" + deviceId + "/current"
+            );
+            return;
+          }
+
+          console.log("✅ Data sensor diterima:", current);
+
+          // Ambil nama lahan dari info
+          infoRef.once("value").then((snap) => {
+            const info = snap.val() || {};
+            document.getElementById("deviceName").textContent =
+              info.nama_lahan || "Lahan Tanaman";
+          });
+
+          // Update nilai sensor di UI
+          document.getElementById("suhu").textContent = `${
+            current.suhu ?? "--"
+          } °C`;
+          document.getElementById("kelembapan_udara").textContent = `${
+            current.kelembapan_udara ?? "--"
+          } %`;
+          document.getElementById("kelembapan_tanah").textContent = `${
+            current.kelembapan_tanah ?? "--"
+          } %`;
+          document.getElementById("cahaya").textContent = `${
+            current.intensitas_cahaya ?? "--"
+          } lux`;
+
+          const now = new Date();
+          const timeLabel = now.toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          document.getElementById("updateTime").textContent =
+            "Diperbarui: " + timeLabel;
+          document.getElementById("lastActive").textContent =
+            "Terakhir aktif: " + timeLabel;
+
+          // Update grafik realtime
+          if (chartData.labels.length >= 20) {
+            chartData.labels.shift();
+            chartData.datasets.forEach((d) => d.data.shift());
+          }
+
+          chartData.labels.push(timeLabel);
+          chartData.datasets[0].data.push(current.kelembapan_tanah || 0);
+          chartData.datasets[1].data.push(current.suhu || 0);
+          chartData.datasets[2].data.push(current.kelembapan_udara || 0);
+          sensorChart.update();
+
+          updateAIInsight(current);
+        });
+
+        // 💡 AI Insight Generator
+        function updateAIInsight(current) {
+          const aiText = document.getElementById("aiText");
+          let text = "";
+
+          if (current.kelembapan_tanah < 35) {
+            text += "Tanah kering — perlu penyiraman segera. ";
+          } else if (current.kelembapan_tanah > 70) {
+            text += "Tanah terlalu lembap, hentikan pompa sementara. ";
+          } else {
+            text += "Kelembapan tanah ideal untuk tanaman. ";
+          }
+
+          if (current.suhu > 32) {
+            text += "Suhu tinggi, hindari penyiraman di siang hari. ";
+          } else if (current.suhu < 20) {
+            text += "Suhu rendah, kurangi intensitas penyiraman. ";
+          }
+
+          if (current.intensitas_cahaya < 200) {
+            text +=
+              "Cahaya rendah, pastikan tanaman mendapat sinar matahari cukup.";
+          }
+
+          aiText.textContent = text.trim();
+        }
+      }
+    </script>
+  </body>
+</html>
