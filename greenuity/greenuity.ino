@@ -173,8 +173,7 @@ void loop() {
       Firebase.RTDB.setInt(
         &fbdo,
         ("/devices/" + String(DEVICE_ID) + "/info/last_seen").c_str(),
-        millis()
-      );
+        millis());
     } else {
       Serial.println("   ℹ️ Firebase not ready — skip writing OFFLINE (will rely on last_seen heartbeat)");
     }
@@ -204,8 +203,7 @@ void loop() {
       Firebase.RTDB.setInt(
         &fbdo,
         ("/devices/" + String(DEVICE_ID) + "/info/last_seen").c_str(),
-        millis()
-      );
+        millis());
     } else {
       Serial.println("   ℹ️ Firebase not ready right after reconnect. setupFirebase() will run next.");
     }
@@ -232,7 +230,7 @@ void loop() {
   // 🔹 5) Kirim data ke Firebase tiap SEND_INTERVAL
   if (millis() - lastSendTime >= SEND_INTERVAL) {
     Serial.println("📤 Sending data to Firebase...");
-    sendToFirebase();        // di dalam sendToFirebase() sudah mengupdate last_seen & status=online
+    sendToFirebase();  // di dalam sendToFirebase() sudah mengupdate last_seen & status=online
     lastSendTime = millis();
   }
 
@@ -284,42 +282,67 @@ void setupWiFi() {
 // ═══════════════════════════════════════
 // FIREBASE SETUP
 // ═══════════════════════════════════════
+
 void setupFirebase() {
   Serial.println("🔥 Setting up Firebase...");
 
-  // Konfigurasi koneksi database
+  // 🔧 Konfigurasi Firebase
   config.database_url = FIREBASE_HOST;
-  config.signer.tokens.legacy_token = FIREBASE_AUTH;  // pakai secret key dari RTDB
+  config.signer.tokens.legacy_token = FIREBASE_AUTH;  // pakai secret key RTDB
   config.timeout.serverResponse = 20 * 1000;          // timeout 20 detik
-
-  // Aktifkan koneksi ulang otomatis
   Firebase.reconnectWiFi(true);
 
-  // Inisialisasi Firebase
+  // 🚀 Inisialisasi Firebase
   Firebase.begin(&config, &auth);
+  fbdo.setResponseSize(4096);  // buffer besar biar gak error JSON
 
-  // Set ukuran buffer untuk response agar tidak error
-  fbdo.setResponseSize(4096);
+  // 📂 Path data
+  String statusPath = "/devices/" + String(DEVICE_ID) + "/info/status";
+  String lastSeenPath = "/devices/" + String(DEVICE_ID) + "/info/last_seen";
 
-  // Cek koneksi Firebase
   if (Firebase.ready()) {
-    Serial.println("✅ Firebase initialized!\n");
+    Serial.println("✅ Firebase initialized!");
 
-    // ✅ Tambahkan status online & waktu aktif terakhir
-    Firebase.RTDB.setString(&fbdo,
-                            ("/devices/" + String(DEVICE_ID) + "/info/status").c_str(),
-                            "online");
+    // ✅ 1. Tandai status awal ONLINE
+    if (Firebase.RTDB.setString(&fbdo, statusPath.c_str(), "online")) {
+      Serial.println("📡 Device status set to ONLINE!");
+    } else {
+      Serial.println("⚠️ Gagal set status online:");
+      Serial.println(fbdo.errorReason());
+    }
 
-    Firebase.RTDB.setInt(&fbdo,
-                         ("/devices/" + String(DEVICE_ID) + "/info/last_seen").c_str(),
-                         millis());
+    // ✅ 2. Simpan timestamp server (waktu aktif terakhir)
+    FirebaseJson ts;
+    ts.set(".sv", "timestamp");
+    if (Firebase.RTDB.setJSON(&fbdo, lastSeenPath.c_str(), &ts)) {
+      Serial.println("🕒 Last seen updated (server time).");
+    } else {
+      Serial.println("⚠️ Gagal update timestamp:");
+      Serial.println(fbdo.errorReason());
+    }
 
-    Serial.println("📡 Device status set to ONLINE in Firebase!");
+    // ✅ 3. Daftarkan perilaku otomatis kalau koneksi mati
+    if (Firebase.RTDB.onDisconnectSetValue(&fbdo, statusPath.c_str(), "offline")) {
+      Serial.println("🛰️ Auto set OFFLINE on disconnect: enabled.");
+    } else {
+      Serial.println("⚠️ Gagal aktifkan auto offline:");
+      Serial.println(fbdo.errorReason());
+    }
+
+    if (Firebase.RTDB.onDisconnectSetJSON(&fbdo, lastSeenPath.c_str(), &ts)) {
+      Serial.println("📡 Auto update last_seen on disconnect: enabled.");
+    } else {
+      Serial.println("⚠️ Gagal set auto timestamp on disconnect:");
+      Serial.println(fbdo.errorReason());
+    }
+
+    Serial.println("✨ Firebase connection ready!\n");
   } else {
     Serial.println("❌ Firebase init failed!");
     Serial.println(config.signer.tokens.status);
   }
 }
+
 
 void registerUnclaimedDevice() {
   Serial.println("📝 Registering as unclaimed device...");
@@ -649,6 +672,7 @@ void readSensors() {
 // ═══════════════════════════════════════
 // SEND DATA TO FIREBASE
 // ═══════════════════════════════════════
+
 void sendToFirebase() {
   Serial.println("🚀 sendToFirebase dipanggil...");
 
@@ -683,6 +707,18 @@ void sendToFirebase() {
   // 🔹 Proses kirim data sensor
   if (Firebase.RTDB.updateNode(&fbdo, path.c_str(), &json)) {
     Serial.println("✅ Data sent to Firebase!");
+
+    // ✅ Update last_seen dengan timestamp server
+    String lastSeenPath = "/devices/" + String(DEVICE_ID) + "/info/last_seen";
+    FirebaseJson ts;
+    ts.set(".sv", "timestamp");
+
+    if (Firebase.RTDB.setJSON(&fbdo, lastSeenPath.c_str(), &ts)) {
+      Serial.println("🕒 last_seen diperbarui (server timestamp).");
+    } else {
+      Serial.println("⚠️ Gagal update last_seen:");
+      Serial.println(fbdo.errorReason());
+    }
   } else {
     Serial.println("❌ Failed to send data!");
     Serial.print("🧩 Error: ");
@@ -692,13 +728,13 @@ void sendToFirebase() {
     return;
   }
 
-  // 🔹 Update status perangkat
+  // 🔹 Update status perangkat (status online + info jaringan)
   if (Firebase.ready()) {
     FirebaseJson infoJson;
     infoJson.set("status", "online");
     infoJson.set("rssi", WiFi.RSSI());
     infoJson.set("ip_address", WiFi.localIP().toString());
-    infoJson.set("last_seen/.sv", "timestamp"); // server timestamp
+    infoJson.set("last_seen/.sv", "timestamp");  // server timestamp
 
     String infoPath = "/devices/" + String(DEVICE_ID) + "/info";
     if (Firebase.RTDB.updateNode(&fbdo, infoPath.c_str(), &infoJson)) {
@@ -712,9 +748,9 @@ void sendToFirebase() {
   Serial.printf(
     "📊 [DEBUG] Suhu: %.1f°C | Kelembapan Udara: %.1f%% | Tanah: %d%% | Cahaya: %.0f lx | Pompa: %s\n",
     suhu, kelembapanUdara, soilMoisture, intensitasCahaya,
-    pompaMenyala ? "ON" : "OFF"
-  );
+    pompaMenyala ? "ON" : "OFF");
 }
+
 
 
 

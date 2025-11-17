@@ -15,6 +15,12 @@
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- google font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Custom color config -->
     <script>
       tailwind.config = {
@@ -24,6 +30,7 @@
               "my-bg": "#173D45",
               "my-teal": "#1B4D57",
             },
+            fontFamily: { poppins: ["Poppins, sans-serif"] },
           },
         },
       };
@@ -35,7 +42,7 @@
     </style>
   </head>
 
-  <body class="bg-my-bg flex items-center justify-center min-h-screen p-4">
+  <body class="bg-my-bg flex items-center justify-center min-h-screen p-4 font-poppins">
     <div class="w-full max-w-md">
       <!-- Logo Section -->
       <div class="text-center mb-8">

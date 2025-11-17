@@ -113,55 +113,31 @@ function createDeviceCard(deviceId, deviceData) {
             <span class="${statusColor} w-3 h-3 rounded-full" id="status-${deviceId}"></span>
           </div>
         `;
-
   deviceList.appendChild(card);
 }
 
-// Update device card
+// Update device card (Realtime dari Firebase)
 function updateDeviceCard(deviceId, deviceData) {
   const statusDot = document.getElementById("status-" + deviceId);
-  if (statusDot) {
-    const status = deviceData.info?.status || "offline";
-    let statusColor = "bg-red-500";
-    if (status === "online") statusColor = "bg-green-500";
-    else if (status === "configuring") statusColor = "bg-yellow-400";
-
-    statusDot.className = `${statusColor} w-3 h-3 rounded-full`;
-  }
-}
-
-// 🔹 Deteksi Device Tidak Aktif (mati diam-diam)
-function checkDeviceActivity(deviceId, deviceData) {
-  const lastSeen = deviceData.info?.last_seen || 0;
-  const now = Date.now();
-  const diffMinutes = Math.floor((now - lastSeen) / 60000); // dalam menit
-
-  const statusDot = document.getElementById("status-" + deviceId);
-
   if (!statusDot) return;
 
-  // Kalau device terakhir aktif lebih dari 2 menit, anggap offline
-  if (diffMinutes > 2) {
-    statusDot.className = "bg-red-500 w-3 h-3 rounded-full";
+  const info = deviceData.info || {};
+  const status = info.status || "offline";
+  const lastSeen = info.last_seen || 0;
+  const now = Date.now();
+  const diffMinutes = Math.floor((now - lastSeen) / 30000);
+
+  // Tentukan warna status
+  let statusColor = "bg-red-500";
+  if (status === "online" && diffMinutes <= 2) {
+    statusColor = "bg-green-500";
+  } else if (status === "online" && diffMinutes > 2) {
+    // Device gak update last_seen padahal status masih online
+    statusColor = "bg-yellow-400";
   }
+
+  statusDot.className = `${statusColor} w-3 h-3 rounded-full`;
 }
-
-// 🔸 Jalankan pengecekan tiap 30 detik untuk semua device
-setInterval(() => {
-  const database = firebase.database();
-  const userDevicesRef = database.ref("users/" + currentUser.uid + "/devices");
-
-  userDevicesRef.once("value", (snapshot) => {
-    if (!snapshot.exists()) return;
-    const deviceIds = Object.keys(snapshot.val());
-
-    deviceIds.forEach((deviceId) => {
-      database.ref("devices/" + deviceId).once("value", (snap) => {
-        if (snap.exists()) checkDeviceActivity(deviceId, snap.val());
-      });
-    });
-  });
-}, 30000);
 
 // Navigation
 function goToHome() {
