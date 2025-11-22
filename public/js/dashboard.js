@@ -9,7 +9,7 @@ function goToEducation() {
   window.location.href = "../edukasi/edukasi.html";
 }
 function goToIrrigation() {
-  window.location.href = "irrigation.html";
+  window.location.href = "../irrigation/irrigation.html";
 }
 function goToProfile() {
   window.location.href = "../profile/profile.html";

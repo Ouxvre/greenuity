@@ -55,6 +55,9 @@ FirebaseData configStream;
 FirebaseData pumpStream;
 FirebaseAuth auth;
 FirebaseConfig config;
+FirebaseData streamPumpCommand;
+FirebaseData streamMode;
+FirebaseData streamManual;
 
 Preferences preferences;
 WiFiManager wifiManager;
@@ -82,9 +85,26 @@ int thresholdMax = 75;
 int durasiPompa = 200;
 unsigned long pompStartTime = 0;
 
+// control pompa lewat web
+String controlMode = "sensor";
+String controlManual = "OFF";
+
+
 // Timing Variables
 unsigned long lastSendTime = 0;
 unsigned long lastCheckTime = 0;
+
+// Jadwal penyiraman dari Firebase
+struct ScheduleItem {
+  int hour;
+  int minute;
+  int duration;
+};
+std::vector<ScheduleItem> schedules;
+
+bool hasRunThisMinute = false;
+
+
 
 // ═══════════════════════════════════════
 // SETUP
@@ -124,6 +144,8 @@ void setup() {
   WiFi.mode(WIFI_STA);
   setupWiFi();
 
+  configTime(7 * 3600, 0, "pool.ntp.org", "time.google.com");
+
   // Setup Firebase
   setupFirebase();
 
@@ -137,7 +159,9 @@ void setup() {
   } else {
     Serial.println("✅ Device sudah di-provision sebelumnya!");
     loadSettings();
+    loadSchedule();  // 🔥 STEP 4 — LOAD JADWAL DI SINI
   }
+
 
   // Setup Listeners
   setupConfigListener();
@@ -145,6 +169,8 @@ void setup() {
   if (isProvisioned) {
     setupPumpListener();
   }
+
+  setupControlListener();
 
   Serial.println("\n✅ Setup Complete!\n");
 }
@@ -220,10 +246,13 @@ void loop() {
   // 🔹 3) Baca sensor
   readSensors();
 
-  // 🔹 4) Auto-irigasi tiap CHECK_INTERVAL
+  // 🔹 4) Auto-irigasi & schedule tiap CHECK_INTERVAL
   if (isProvisioned && millis() - lastCheckTime >= CHECK_INTERVAL) {
-    checkAutoIrrigation();
-    checkPumpTimer();
+
+    checkSchedule();        // 🔥 NEW — CEK JADWAL
+    checkAutoIrrigation();  // Auto berdasarkan sensor tanah
+    checkPumpTimer();       // Timer auto-off sesuai durasi
+
     lastCheckTime = millis();
   }
 
@@ -245,6 +274,7 @@ void loop() {
 // ═══════════════════════════════════════
 // WIFI SETUP
 // ═══════════════════════════════════════
+
 void setupWiFi() {
   Serial.println("📡 Setting up WiFi...");
   WiFi.setHostname(DEVICE_ID);
@@ -321,20 +351,10 @@ void setupFirebase() {
       Serial.println(fbdo.errorReason());
     }
 
-    // ✅ 3. Daftarkan perilaku otomatis kalau koneksi mati
-    if (Firebase.RTDB.onDisconnectSetValue(&fbdo, statusPath.c_str(), "offline")) {
-      Serial.println("🛰️ Auto set OFFLINE on disconnect: enabled.");
-    } else {
-      Serial.println("⚠️ Gagal aktifkan auto offline:");
-      Serial.println(fbdo.errorReason());
-    }
+    // 3. onDisconnect feature removed in latest Firebase library
+    Serial.println("ℹ️ onDisconnect() not supported in current Firebase library, skipping...");
 
-    if (Firebase.RTDB.onDisconnectSetJSON(&fbdo, lastSeenPath.c_str(), &ts)) {
-      Serial.println("📡 Auto update last_seen on disconnect: enabled.");
-    } else {
-      Serial.println("⚠️ Gagal set auto timestamp on disconnect:");
-      Serial.println(fbdo.errorReason());
-    }
+
 
     Serial.println("✨ Firebase connection ready!\n");
   } else {
@@ -523,21 +543,108 @@ void loadSettings() {
   }
 }
 
-// ═══════════════════════════════════════
-// PUMP LISTENER (Manual Control from Web)
-// ═══════════════════════════════════════
-void setupPumpListener() {
-  String path = "/devices/" + String(DEVICE_ID) + "/control/pump_command";
-  Serial.println("👂 Listening for pump control...");
+void loadSchedule() {
+  Serial.println("📅 Loading schedule...");
 
-  if (!Firebase.RTDB.beginStream(&pumpStream, path.c_str())) {
-    Serial.println("❌ Failed to start pump listener!");
+  String path = "/devices/" + String(DEVICE_ID) + "/control/schedule/times";
+
+  if (!Firebase.RTDB.getJSON(&fbdo, path)) {
+    Serial.println("⚠️ No schedule found or failed to load.");
     return;
   }
 
-  Firebase.RTDB.setStreamCallback(&pumpStream, onPumpControl, onStreamTimeout);
-  Serial.println("✅ Pump listener active!");
+  FirebaseJson json;
+  json.setJsonData(fbdo.payload());
+
+  schedules.clear();
+
+  size_t count = json.iteratorBegin();
+  FirebaseJson::IteratorValue item;
+
+  for (size_t i = 0; i < count; i++) {
+    item = json.valueAt(i);
+
+    FirebaseJson sub;
+    sub.setJsonData(item.value);
+
+    FirebaseJsonData rHour, rMinute, rDuration;
+
+    if (sub.get(rHour, "hour") && sub.get(rMinute, "minute") && sub.get(rDuration, "duration")) {
+      ScheduleItem s;
+      s.hour = rHour.to<int>();
+      s.minute = rMinute.to<int>();
+      s.duration = rDuration.to<int>();
+      schedules.push_back(s);
+
+      Serial.printf("🕒 Added schedule → %02d:%02d - %ds\n",
+                    s.hour, s.minute, s.duration);
+    }
+  }
+
+  json.iteratorEnd();
+  Serial.printf("📌 Total schedules loaded: %d\n", schedules.size());
 }
+
+
+// ═══════════════════════════════════════
+// PUMP LISTENER (Manual Control from Web)
+// ═══════════════════════════════════════
+
+void setupPumpListener() {
+  String path = "/devices/" + String(DEVICE_ID) + "/control/pump_command";
+
+  Serial.println("👂 Listening pump_command...");
+
+  if (!Firebase.RTDB.beginStream(&streamPumpCommand, path.c_str())) {
+    Serial.println("❌ Failed pump_command listener!");
+    return;
+  }
+
+  Firebase.RTDB.setStreamCallback(&streamPumpCommand, onPumpControl, onStreamTimeout);
+}
+
+
+void setupControlListener() {
+  String modePath = "/devices/" + String(DEVICE_ID) + "/control/mode";
+  String manualPath = "/devices/" + String(DEVICE_ID) + "/control/manual";
+
+  // MODE LISTENER
+  if (Firebase.RTDB.beginStream(&streamMode, modePath.c_str())) {
+    Firebase.RTDB.setStreamCallback(&streamMode, onModeChange, onStreamTimeout);
+    Serial.println("👂 Listening mode...");
+  } else {
+    Serial.println("❌ Failed mode listener");
+  }
+
+  // MANUAL LISTENER
+  if (Firebase.RTDB.beginStream(&streamManual, manualPath.c_str())) {
+    Firebase.RTDB.setStreamCallback(&streamManual, onManualChange, onStreamTimeout);
+    Serial.println("👂 Listening manual...");
+  } else {
+    Serial.println("❌ Failed manual listener");
+  }
+}
+
+
+void onModeChange(FirebaseStream data) {
+  if (data.dataType() == "string") {
+    controlMode = data.to<String>();
+    Serial.println("🎛 Mode changed to: " + controlMode);
+  }
+}
+
+void onManualChange(FirebaseStream data) {
+  if (data.dataType() == "string") {
+    controlManual = data.to<String>();
+    Serial.println("🖐 Manual pump command: " + controlManual);
+
+    if (controlMode == "manual") {
+      if (controlManual == "ON") turnPumpOn("manual");
+      else turnPumpOff("manual");
+    }
+  }
+}
+
 
 void onPumpControl(FirebaseStream data) {
   if (data.dataType() == "string") {
@@ -615,19 +722,53 @@ void logPumpActivity(String action, String trigger) {
 // ═══════════════════════════════════════
 // AUTO IRRIGATION
 // ═══════════════════════════════════════
+
 void checkAutoIrrigation() {
+  // 🔥 Jangan auto kalau mode manual
+  if (controlMode == "manual") return;
+
   if (!modeOtomatis || !isProvisioned) return;
 
-  // Turn ON if soil is dry
   if (soilMoisture < thresholdMin && !pompaMenyala) {
     turnPumpOn("auto");
-  }
-
-  // Turn OFF if soil is wet enough
-  else if (soilMoisture > thresholdMax && pompaMenyala) {
+  } else if (soilMoisture > thresholdMax && pompaMenyala) {
     turnPumpOff("auto");
   }
 }
+
+void checkSchedule() {
+  if (controlMode == "manual") return;  // Manual block schedule
+
+  if (!isProvisioned || schedules.empty()) return;
+
+  // Ambil waktu sekarang
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) return;
+
+  int hour = timeinfo.tm_hour;
+  int minute = timeinfo.tm_min;
+
+  // Cegah double-trigger
+  if (hasRunThisMinute) {
+    if (timeinfo.tm_sec == 0) hasRunThisMinute = false;
+    return;
+  }
+
+  // Cek setiap jadwal
+  for (auto &s : schedules) {
+    if (s.hour == hour && s.minute == minute) {
+      Serial.printf("🚿 Running schedule: %02d:%02d for %ds\n",
+                    s.hour, s.minute, s.duration);
+
+      turnPumpOn("schedule");
+      durasiPompa = s.duration;
+
+      hasRunThisMinute = true;
+      return;
+    }
+  }
+}
+
 
 // Check pump timer (auto-off after duration)
 void checkPumpTimer() {
