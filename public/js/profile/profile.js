@@ -100,7 +100,7 @@
         try {
           await auth.signOut();
           console.log("✅ Logout berhasil");
-          window.location.href = "/index.html";
+          window.location.href = "../auth/login.html";
         } catch (error) {
           console.error("❌ Gagal logout:", error);
           alert("Gagal logout: " + error.message);

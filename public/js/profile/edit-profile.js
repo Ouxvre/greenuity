@@ -42,7 +42,17 @@ async function loadUserData(user) {
       const userData = userDoc.data();
 
       if (userData.phone) {
-        document.getElementById("phone").value = userData.phone;
+        const raw = userData.phone.replace(/\D/g, ""); // pastikan hanya digit
+        let formatted = raw;
+
+        // Format menjadi: +62 xxxx-xxxx-xxxx
+        if (raw.length >= 6) {
+          formatted = `+${raw.slice(0, 2)} ${raw.slice(2, 6)}-${raw.slice(6)}`;
+        } else if (raw.startsWith("62")) {
+          formatted = `+${raw}`;
+        }
+
+        document.getElementById("phone").value = formatted;
       }
     }
 
@@ -126,7 +136,20 @@ document
     }
 
     const fullName = document.getElementById("fullName").value.trim();
-    const phone = document.getElementById("phone").value.trim();
+    
+    // Ambil nomor dan buang semua simbol
+    let phone = document.getElementById("phone").value.replace(/\D/g, "");
+
+    // Jika user memasukkan 0 di depan, ubah ke 62
+    if (phone.startsWith("0")) {
+      phone = "62" + phone.substring(1);
+    }
+
+    // Wajib diawali 62
+    if (!phone.startsWith("62")) {
+      alert("Nomor telepon harus diawali 62");
+      return;
+    }
 
     // Show loading
     document.getElementById("loadingOverlay").classList.remove("hidden");

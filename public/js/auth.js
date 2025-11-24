@@ -60,9 +60,30 @@ async function handleRegister(event) {
   const name = document.getElementById("registerName").value;
   const email = document.getElementById("registerEmail").value;
   const password = document.getElementById("registerPassword").value;
+  let phone = document.getElementById("registerPhone").value.trim();
 
   if (password.length < 6) {
     showAlert("Password harus minimal 6 karakter", "error");
+    return;
+  }
+
+  // Bersihkan semua karakter non-angka (hapus spasi, +, -, dll)
+  phone = phone.replace(/\D/g, "");
+
+  // Jika user memasukkan 08xxxx → ubah ke 62xxxx
+  if (phone.startsWith("0")) {
+    phone = "62" + phone.substring(1);
+  }
+
+  // Wajib diawali 62
+  if (!phone.startsWith("62")) {
+    showAlert("Nomor WA harus dimulai dengan 08 atau 62", "error");
+    return;
+  }
+
+  // Minimal panjang nomor 10 digit
+  if (phone.length < 10) {
+    showAlert("Nomor WA tidak valid", "error");
     return;
   }
 
@@ -82,6 +103,7 @@ async function handleRegister(event) {
       await db.collection("users").doc(user.uid).set({
         name,
         email,
+        phone,
         role: "user",
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });

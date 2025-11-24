@@ -1,5 +1,3 @@
-// Main JavaScript Functions
-
 // Switch between Login and Register tabs
 function switchTab(tab) {
   const tabMasuk = document.getElementById("tabMasuk");
@@ -26,17 +24,20 @@ function switchTab(tab) {
 }
 
 // Toggle password visibility
-function togglePassword(inputId) {
-  const passwordInput = document.getElementById(inputId);
-  const button = event.currentTarget;
-  const svg = button.querySelector("svg");
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
 
-  if (passwordInput.type === "password") {
-    passwordInput.type = "text";
-    // Ganti icon ke "eye-off" jika perlu
+  const eye = btn.querySelector(".eye-icon");
+  const eyeSlash = btn.querySelector(".eye-slash-icon");
+
+  if (input.type === "password") {
+    input.type = "text";
+    eye.classList.add("hidden");
+    eyeSlash.classList.remove("hidden");
   } else {
-    passwordInput.type = "password";
-    // Ganti icon ke "eye" jika perlu
+    input.type = "password";
+    eye.classList.remove("hidden");
+    eyeSlash.classList.add("hidden");
   }
 }
 
