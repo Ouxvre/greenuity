@@ -147,3 +147,63 @@ if (!deviceId) {
     aiText.textContent = text.trim();
   }
 }
+
+// --- SETTINGS MODAL ---
+function openSettings() {
+  document.getElementById("settingsModal").classList.remove("hidden");
+
+  infoRef.once("value").then((snap) => {
+    const info = snap.val() || {};
+    document.getElementById("inputNamaDevice").value = info.nama_lahan || "";
+    document.getElementById("inputLokasi").value = info.lokasi || "";
+  });
+}
+
+function closeSettings() {
+  document.getElementById("settingsModal").classList.add("hidden");
+}
+
+// --- SAVE SETTINGS ---
+function saveSettings() {
+  const nama = document.getElementById("inputNamaDevice").value.trim();
+  const lokasi = document.getElementById("inputLokasi").value.trim();
+
+  database.ref("devices/" + deviceId + "/info").update({
+    nama_lahan: nama,
+    lokasi: lokasi,
+    updated_at: Date.now(),
+  });
+
+  closeSettings();
+  alert("Pengaturan berhasil disimpan!");
+}
+
+// --- RESTART DEVICE ---
+function restartDevice() {
+  if (!confirm("Yakin ingin restart device?")) return;
+
+  database.ref("devices/" + deviceId + "/control/restart").set(true);
+  alert("Perintah restart dikirim!");
+}
+
+// --- DELETE DEVICE ---
+function deleteDevice() {
+  if (!confirm("Hapus device ini? Device akan kembali ke mode setup.")) return;
+
+  // Move to unclaimed_devices (optional)
+  database.ref("unclaimed_devices/" + deviceId).set({
+    status: "ready_to_claim",
+    deleted_at: Date.now(),
+  });
+
+  // Hapus pending_config untuk device ini
+  database.ref("pending_config/" + deviceId).remove();
+
+  // Delete from devices
+  database.ref("devices/" + deviceId).remove();
+
+  database.ref("users/" + userId + "/devices/" + deviceId).remove();
+
+  alert("Device berhasil dihapus!");
+  window.location.href = "/monitoring/monitoring.html";
+}

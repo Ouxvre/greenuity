@@ -1,7 +1,7 @@
 let currentUser = null;
 let deviceId = null;
 
-// Get device ID from URL parameter
+// --------------------- INIT ---------------------
 window.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   deviceId = urlParams.get("deviceId");
@@ -14,7 +14,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("displayDeviceId").textContent = deviceId;
 
-  // Check auth
   firebase.auth().onAuthStateChanged((user) => {
     if (!user) {
       alert("Anda harus login terlebih dahulu!");
@@ -26,26 +25,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Toggle WiFi password visibility
-function toggleWiFiPassword() {
-  const passwordInput = document.getElementById("wifiPassword");
-  const eyeIcon = document.getElementById("wifiEyeIcon");
-
-  if (passwordInput.type === "password") {
-    passwordInput.type = "text";
-    eyeIcon.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-          `;
-  } else {
-    passwordInput.type = "password";
-    eyeIcon.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-          `;
-  }
-}
-
-// Save device to Firebase
+// --------------------- SAVE DEVICE ---------------------
 async function saveDevice() {
   if (!currentUser) {
     alert("User tidak ditemukan! Silakan login ulang.");
@@ -53,59 +33,55 @@ async function saveDevice() {
     return;
   }
 
+  const pairingToken = document.getElementById("pairingToken").value.trim();
   const fieldName = document.getElementById("fieldName").value.trim();
   const plantType = document.getElementById("plantType").value;
   const fieldArea = document.getElementById("fieldArea").value;
   const location = document.getElementById("location").value.trim();
   const thresholdMin = parseInt(document.getElementById("thresholdMin").value);
   const thresholdMax = parseInt(document.getElementById("thresholdMax").value);
-  const wifiSSID = document.getElementById("wifiSSID").value.trim();
-  const wifiPassword = document.getElementById("wifiPassword").value;
 
-  // Validation
-  if (!fieldName) {
-    alert("❌ Nama lahan harus diisi!");
-    return;
-  }
+  // --- VALIDATION ---
+  if (!pairingToken) return alert("❌ Pairing token harus diisi!");
+  if (!fieldName) return alert("❌ Nama lahan harus diisi!");
+  if (!plantType) return alert("❌ Jenis tanaman harus dipilih!");
+  if (thresholdMin >= thresholdMax)
+    return alert("❌ Threshold minimal harus lebih kecil dari maksimal!");
 
-  if (!plantType) {
-    alert("❌ Jenis tanaman harus dipilih!");
-    return;
-  }
-
-  if (thresholdMin >= thresholdMax) {
-    alert("❌ Threshold minimal harus lebih kecil dari threshold maksimal!");
-    return;
-  }
-
-  if (!wifiSSID || !wifiPassword) {
-    alert("❌ WiFi SSID dan Password harus diisi!");
-    return;
-  }
-
-  // Show loading
-  document.getElementById("loadingOverlay").classList.remove("hidden");
-  document.getElementById("loadingOverlay").classList.add("flex");
+  showLoading();
 
   try {
     const database = firebase.database();
 
-    // Check if device already exists
-    const deviceRef = database.ref("devices/" + deviceId);
-    const snapshot = await deviceRef.once("value");
+    // --- 1. CEK DI /unclaimed_devices/<deviceId> ---
+    const unclaimedRef = database.ref("unclaimed_devices/" + deviceId);
+    const unclaimed = await unclaimedRef.once("value");
 
-    if (snapshot.exists()) {
-      const existingDevice = snapshot.val();
-      if (
-        existingDevice.info &&
-        existingDevice.info.owner_id &&
-        existingDevice.info.owner_id !== currentUser.uid
-      ) {
+    if (!unclaimed.exists()) {
+      hideLoading();
+      return alert("❌ Device belum dalam mode konfigurasi atau tidak ditemukan!");
+    }
+
+    const tokenFromDB = unclaimed.val().pairing_token;
+
+    if (pairingToken !== tokenFromDB) {
+      hideLoading();
+      return alert("❌ Pairing Token salah!");
+    }
+
+    // --- 2. CEK APAKAH DEVICE SUDAH DIMILIKI USER LAIN ---
+    const deviceRef = database.ref("devices/" + deviceId);
+    const deviceSnap = await deviceRef.once("value");
+
+    if (deviceSnap.exists()) {
+      const dev = deviceSnap.val();
+      if (dev.info && dev.info.owner_id && dev.info.owner_id !== currentUser.uid) {
+        hideLoading();
         throw new Error("Device sudah terdaftar oleh user lain!");
       }
     }
 
-    // Save device data
+    // --- 3. SIMPAN DATA DEVICE ---
     await deviceRef.set({
       info: {
         owner_id: currentUser.uid,
@@ -116,6 +92,7 @@ async function saveDevice() {
         lokasi: location || "",
         created_at: firebase.database.ServerValue.TIMESTAMP,
         updated_at: firebase.database.ServerValue.TIMESTAMP,
+        status: "online"
       },
       current: {
         kelembapan_tanah: 0,
@@ -126,51 +103,54 @@ async function saveDevice() {
         timestamp: firebase.database.ServerValue.TIMESTAMP,
       },
       settings: {
-        mode_otomatis: true,
         threshold_min: thresholdMin,
         threshold_max: thresholdMax,
         durasi_pompa: 300,
-        wifi_ssid: wifiSSID,
-        wifi_password: btoa(wifiPassword),
-      },
-      status: "offline",
+      }
     });
 
-    // Add device to user's device list
+    // --- 4. Tambah device ke list user ---
     await database
       .ref("users/" + currentUser.uid + "/devices/" + deviceId)
       .set(true);
 
-    console.log("✅ Device saved successfully");
+    // --- 5. Hapus unclaimed ---
+    await unclaimedRef.remove();
 
-    // Hide loading
-    document.getElementById("loadingOverlay").classList.add("hidden");
-    document.getElementById("loadingOverlay").classList.remove("flex");
+    hideLoading();
+    showSuccess();
 
-    // Show success modal
-    document.getElementById("successModal").classList.remove("hidden");
-    document.getElementById("successModal").classList.add("flex");
-  } catch (error) {
-    console.error("❌ Error saving device:", error);
+    console.log("✅ Device paired successfully!");
+  } catch (err) {
+    hideLoading();
+    console.error(err);
 
-    // Hide loading
-    document.getElementById("loadingOverlay").classList.add("hidden");
-    document.getElementById("loadingOverlay").classList.remove("flex");
+    let msg = "Gagal menyimpan perangkat!";
 
-    let errorMessage = "Gagal menyimpan perangkat!";
+    if (err.message.includes("sudah terdaftar")) msg = err.message;
+    if (err.code === "PERMISSION_DENIED") msg = "Permission denied! Periksa rules Firebase.";
 
-    if (error.message.includes("sudah terdaftar")) {
-      errorMessage = error.message;
-    } else if (error.code === "PERMISSION_DENIED") {
-      errorMessage =
-        "Tidak memiliki izin untuk menambahkan perangkat. Periksa Firebase Database Rules.";
-    }
-
-    alert(errorMessage + "\n\nDetail: " + error.message);
+    alert(msg + "\n\nDetail: " + err.message);
   }
 }
 
-// Navigation
+// --------------------- UI HELPERS ---------------------
+function showLoading() {
+  document.getElementById("loadingOverlay").classList.remove("hidden");
+  document.getElementById("loadingOverlay").classList.add("flex");
+}
+
+function hideLoading() {
+  document.getElementById("loadingOverlay").classList.add("hidden");
+  document.getElementById("loadingOverlay").classList.remove("flex");
+}
+
+function showSuccess() {
+  document.getElementById("successModal").classList.remove("hidden");
+  document.getElementById("successModal").classList.add("flex");
+}
+
+// --------------------- NAVIGATION ---------------------
 function goBack() {
   if (confirm("Data yang belum disimpan akan hilang. Yakin ingin kembali?")) {
     window.location.href = "add-device.html";

@@ -97,6 +97,8 @@ bool scheduleRunning = false;
 
 unsigned long lastFirebaseInit = 0;
 
+String pairingToken = "";
+
 // forward declarations
 void setupWiFi();
 void setupFirebase();
@@ -135,17 +137,28 @@ void setup() {
   dht.begin();
 
   preferences.begin("smartfarm", false);
+
+  // --- Generate or load pairing token ---
+  if (preferences.isKey("pairing_token")) {
+    pairingToken = preferences.getString("pairing_token", "");
+    Serial.println("Pairing Token Loaded: " + pairingToken);
+  } else {
+    // Generate 8-digit token
+    uint32_t rnd = esp_random();
+    pairingToken = String((rnd % 90000000) + 10000000);  // 8 digit
+    preferences.putString("pairing_token", pairingToken);
+    Serial.println("Generated Pairing Token: " + pairingToken);
+  }
+
   isProvisioned = preferences.getBool("provisioned", false);
 
   if (isProvisioned) {
-    currentSSID = preferences.getString("wifi_ssid", "");
     ownerID = preferences.getString("owner_id", "");
-    Serial.println("✅ Provisioned (stored)");
-    Serial.println("   Owner: " + ownerID);
-    Serial.println("   SSID: " + currentSSID);
+    Serial.println("✅ Device Provisioned sebelumnya");
   } else {
-    Serial.println("⚠ Device not provisioned");
+    Serial.println("⚠ Device belum diklaim (unclaimed mode)");
   }
+
 
   WiFi.mode(WIFI_STA);
   setupWiFi();
@@ -173,6 +186,7 @@ void setup() {
     String path = "/unclaimed_devices/" + String(DEVICE_ID);
     FirebaseJson json;
     json.set("status", "ready_to_claim");
+    json.set("pairing_token", pairingToken);
     json.set("first_boot/.sv", "timestamp");
     json.set("last_seen/.sv", "timestamp");
     json.set("wifi_ssid", WiFi.SSID());
@@ -225,6 +239,30 @@ void loop() {
     lastFirebaseInit = millis();
   }
 
+  // --- DETEKSI DEVICE DIKLAIM (PAIRING SUKSES) ---
+  if (!isProvisioned && Firebase.ready()) {
+    String path = "/devices/" + String(DEVICE_ID) + "/info/owner_id";
+
+    if (Firebase.RTDB.getString(&fbdo, path.c_str())) {
+      String owner = fbdo.stringData();
+
+      if (owner.length() > 0) {
+        Serial.println("🎉 Device baru saja DIKLAIM!");
+
+        isProvisioned = true;
+        ownerID = owner;
+
+        preferences.putBool("provisioned", true);
+        preferences.putString("owner_id", owner);
+
+        loadSettings();
+        loadSchedule();
+
+        Serial.println("➡ Masuk ke MODE NORMAL");
+      }
+    }
+  }
+
   readSensors();
 
   if (millis() - lastCheckTime >= CHECK_INTERVAL) {
@@ -245,6 +283,31 @@ void loop() {
 
   checkSerialCommands();
 
+  // ---- AUTO FACTORY RESET JIKA DEVICE DIHAPUS DI FIREBASE ----
+  static unsigned long lastCheckDelete = 0;
+  if (millis() - lastCheckDelete > 10000) {  // cek tiap 10 detik
+    lastCheckDelete = millis();
+
+    String devicePath = "/devices/" + String(DEVICE_ID) + "/info";
+
+    // jika path tidak ada → device sudah dihapus dari dashboard
+    if (Firebase.ready() && !Firebase.RTDB.pathExisted(&fbdo, devicePath.c_str())) {
+      Serial.println("❌ Device deleted in Firebase → factory reset");
+
+      // hapus semua prefs (wifi_ssid, owner_id, provisioned)
+      preferences.clear();
+      preferences.end();
+
+      // hapus WiFi config
+      wifiManager.resetSettings();
+      WiFi.disconnect(true, true);
+      delay(500);
+
+      // restart device agar masuk mode setup
+      ESP.restart();
+    }
+  }
+
   delay(200);
   yield();
 }
@@ -257,19 +320,39 @@ void setupWiFi() {
   String apName = "SmartFarm-" + String(DEVICE_ID);
   String apPassword = "greenuity123";
 
-  wifiManager.setAPCallback([](WiFiManager *myWiFiManager) {
-    Serial.println("\n╔══════════════════════════════════════╗");
-    Serial.println("║         MODE KONFIGURASI AKTIF       ║");
-    Serial.println("╚══════════════════════════════════════╝");
-    Serial.println("📱 Sambungkan HP Anda ke hotspot:");
-    Serial.println("   SSID     : " + String(myWiFiManager->getConfigPortalSSID()));
-    Serial.println("   Password : greenuity123");
-    Serial.println("🌐 Akses pengaturan di:");
-    Serial.println("   http://192.168.4.1");
-    Serial.println("════════════════════════════════════════");
-  });
+  wifiManager.setDebugOutput(false);
+  wifiManager.setConfigPortalTimeout(300);
 
-  wifiManager.setConfigPortalTimeout(300);  // 5 menit
+  // ---- Token Char ----
+  char tokenChar[10];
+  pairingToken.toCharArray(tokenChar, 10);
+
+  // ---- CUSTOM UI ----
+  String html =
+    "<style>"
+    "body{font-family:Arial;background:#f3f6fa;margin:0;padding:20px;text-align:center;}"
+    ".card{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}"
+    ".title{font-size:24px;font-weight:bold;color:#1B4D57;margin-bottom:10px;}"
+    ".tokenBox{background:#e8f5ff;padding:12px;border-radius:12px;margin:15px 0;}"
+    ".tokenLabel{font-size:14px;color:#1B4D57;font-weight:bold;}"
+    ".tokenValue{font-size:28px;font-weight:bold;color:#1B4D57;letter-spacing:3px;}"
+    "input{width:100%;padding:12px;border-radius:10px;border:2px solid #ddd;font-size:16px;margin-top:10px;}"
+    "button{width:100%;padding:14px;border:none;border-radius:12px;font-size:18px;font-weight:bold;margin-top:15px;}"
+    ".btn-primary{background:#1B4D57;color:white;}"
+    ".btn-secondary{background:#e0e0e0;color:#333;}"
+    "#save, #wifi{display:none;} /* hide wifiManager default UI */"
+    "</style>"
+    "<div class='card'>"
+    "<div class='title'>SmartFarm Setup</div>"
+    "<div class='tokenBox'>"
+    "<div class='tokenLabel'>PAIRING TOKEN</div>"
+    "<div class='tokenValue'>"
+    + pairingToken + "</div>"
+                     "</div>"
+                     "</div>";
+
+  WiFiManagerParameter customUI(html.c_str());
+  wifiManager.addParameter(&customUI);
 
   if (!wifiManager.autoConnect(apName.c_str(), apPassword.c_str())) {
     Serial.println("❌ Timeout konfigurasi! Restarting...");
@@ -285,6 +368,7 @@ void setupWiFi() {
   isConnected = true;
   currentSSID = WiFi.SSID();
 }
+
 
 // ---------------- FIREBASE ----------------
 void setupFirebase() {
@@ -593,7 +677,7 @@ void logPumpActivity(const String &action, const String &trigger) {
 
 // ---------------- AUTO IRRIGATION ----------------
 void checkAutoIrrigation() {
-  if (scheduleRunning) return;     // schedule has priority when running
+  if (scheduleRunning) return;  // schedule has priority when running
   if (!isProvisioned) return;
 
   // If manual override active, do not let auto turn the pump OFF or ON
@@ -720,12 +804,25 @@ void checkSerialCommands() {
   char cmd = Serial.read();
   switch (cmd) {
     case 'r':
-      Serial.println("🔄 Resetting and clearing prefs");
-      preferences.clear();
-      wifiManager.resetSettings();
-      delay(500);
-      ESP.restart();
-      break;
+      {
+        Serial.println("🔥 FACTORY RESET!");
+
+        Preferences p;
+        const char *namespaces[] = { "smartfarm", "wifi", "settings", "greenuity" };
+        for (int i = 0; i < 4; i++) {
+          p.begin(namespaces[i], false);
+          p.clear();
+          p.end();
+        }
+
+        // Reset WiFi config ESP32
+        wifiManager.resetSettings();
+        WiFi.disconnect(true, true);
+
+        delay(500);
+        ESP.restart();
+        break;
+      }
     case 'i':
       printDeviceInfo();
       break;
