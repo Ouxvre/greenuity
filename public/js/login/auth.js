@@ -2,8 +2,8 @@
 async function handleLogin(event) {
   event.preventDefault();
 
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
 
   try {
     const userCredential = await auth.signInWithEmailAndPassword(
@@ -34,19 +34,43 @@ async function handleLogin(event) {
     console.error("Login error:", error);
 
     let errorMessage = "Terjadi kesalahan saat login";
-    switch (error.code) {
-      case "auth/user-not-found":
-        errorMessage = "Email tidak terdaftar";
-        break;
-      case "auth/wrong-password":
-        errorMessage = "Password salah";
-        break;
-      case "auth/invalid-email":
-        errorMessage = "Format email tidak valid";
-        break;
-      case "auth/user-disabled":
-        errorMessage = "Akun ini telah dinonaktifkan";
-        break;
+
+    // Handle Firebase v10 real error messages
+    if (
+      error.code === "auth/invalid-credential" ||
+      error.code === "auth/invalid-login-credentials"
+    ) {
+      errorMessage = "Email atau password salah";
+    } else {
+      switch (error.code) {
+        case "auth/user-not-found":
+          errorMessage = "Email tidak terdaftar";
+          break;
+
+        case "auth/wrong-password":
+          errorMessage = "Password salah";
+          break;
+
+        case "auth/invalid-email":
+          errorMessage = "Format email tidak valid";
+          break;
+
+        case "auth/missing-email":
+          errorMessage = "Email tidak boleh kosong";
+          break;
+
+        case "auth/missing-password":
+          errorMessage = "Password tidak boleh kosong";
+          break;
+
+        case "auth/too-many-requests":
+          errorMessage = "Terlalu banyak percobaan. Coba lagi nanti.";
+          break;
+
+        case "auth/user-disabled":
+          errorMessage = "Akun ini telah dinonaktifkan";
+          break;
+      }
     }
 
     showAlert(errorMessage, "error");
@@ -57,9 +81,9 @@ async function handleLogin(event) {
 async function handleRegister(event) {
   event.preventDefault();
 
-  const name = document.getElementById("registerName").value;
-  const email = document.getElementById("registerEmail").value;
-  const password = document.getElementById("registerPassword").value;
+  const name = document.getElementById("registerName").value.trim();
+  let email = document.getElementById("registerEmail").value.trim();
+  let password = document.getElementById("registerPassword").value.trim();
   let phone = document.getElementById("registerPhone").value.trim();
 
   if (password.length < 6) {
@@ -67,38 +91,35 @@ async function handleRegister(event) {
     return;
   }
 
-  // Bersihkan semua karakter non-angka (hapus spasi, +, -, dll)
+  // Bersihkan karakter non angka
   phone = phone.replace(/\D/g, "");
 
-  // Jika user memasukkan 08xxxx → ubah ke 62xxxx
+  // 08xxxxx → 62xxxxxx
   if (phone.startsWith("0")) {
     phone = "62" + phone.substring(1);
   }
 
-  // Wajib diawali 62
   if (!phone.startsWith("62")) {
     showAlert("Nomor WA harus dimulai dengan 08 atau 62", "error");
     return;
   }
 
-  // Minimal panjang nomor 10 digit
   if (phone.length < 10) {
     showAlert("Nomor WA tidak valid", "error");
     return;
   }
 
   try {
-    // Buat user baru
     const userCredential = await auth.createUserWithEmailAndPassword(
       email,
       password
     );
     const user = userCredential.user;
 
-    // Update profile dengan nama
-    await user.updateProfile({ displayName: name });
+    await user.updateProfile({
+      displayName: name,
+    });
 
-    // Simpan ke Firestore
     if (typeof db !== "undefined") {
       await db.collection("users").doc(user.uid).set({
         name,
@@ -109,7 +130,6 @@ async function handleRegister(event) {
       });
     }
 
-    // Kirim email verifikasi
     await user.sendEmailVerification({
       url: "https://greenuity-id.web.app/pages/auth/verify-email.html",
     });
@@ -119,7 +139,6 @@ async function handleRegister(event) {
       "success"
     );
 
-    // Ganti ke tab login
     setTimeout(() => {
       switchTab("masuk");
       document.getElementById("loginEmail").value = email;
@@ -129,6 +148,7 @@ async function handleRegister(event) {
     console.error("Register error:", error);
 
     let errorMessage = "Terjadi kesalahan saat pendaftaran";
+
     switch (error.code) {
       case "auth/email-already-in-use":
         errorMessage = "Email sudah terdaftar, silakan login";
