@@ -28,6 +28,7 @@
           extend: {
             fontFamily: { poppins: ["Poppins", "sans-serif"] },
             colors: {
+              primary: "#1B4D57",
               "my-teal": "#1B4D57",
               "my-soft": "#F6FBFA",
               "my-accent": "#173D45",
@@ -61,32 +62,34 @@
     <!-- Container -->
     <div class="max-w-md mx-auto p-4">
       <!-- Header -->
-      <header class="flex items-center gap-3 mb-6">
-        <button
-          onclick="history.back()"
-          class="p-2 rounded-full bg-white shadow-sm"
-        >
-          <!-- Back arrow -->
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 text-gray-700"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <div class="px-6 py-4 top-0 z-10">
+        <div class="flex items-center justify-between">
+          <button
+            onclick="goBack()"
+            class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white shadow-md hover:bg-primary/90"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
               stroke-width="2"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <h1 class="text-lg font-semibold text-my-accent">Syarat & Ketentuan</h1>
-      </header>
+              stroke="currentColor"
+              class="w-6 h-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h1 class="text-lg font-bold">Syarat & Ketentuan</h1>
+          <div class="w-10"></div>
+        </div>
+      </div>
 
       <!-- Card -->
-      <main class="bg-white rounded-2xl shadow-md overflow-hidden">
+      <main class="bg-white rounded-2xl shadow-md overflow-hidden mt-6">
         <!-- Top banner -->
         <div class="bg-my-teal px-5 py-6 text-white">
           <div class="flex items-start gap-4">

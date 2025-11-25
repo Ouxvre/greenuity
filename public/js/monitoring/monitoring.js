@@ -157,7 +157,7 @@ function goToProfile() {
 }
 
 function goToAddDevice() {
-  window.location.href = "add-device.html";
+  window.location.href = "scan-device.html";
 }
 
 function goToDeviceDetail(deviceId) {

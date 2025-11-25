@@ -8,7 +8,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (!deviceId) {
     alert("Device ID tidak ditemukan!");
-    window.location.href = "add-device.html";
+    window.location.href = "scan-device.html";
     return;
   }
 
@@ -153,7 +153,7 @@ function showSuccess() {
 // --------------------- NAVIGATION ---------------------
 function goBack() {
   if (confirm("Data yang belum disimpan akan hilang. Yakin ingin kembali?")) {
-    window.location.href = "add-device.html";
+    window.location.href = "scan-device.html";
   }
 }
 
@@ -162,5 +162,5 @@ function goToDashboard() {
 }
 
 function addAnotherDevice() {
-  window.location.href = "add-device.html";
+  window.location.href = "scan-device.html";
 }

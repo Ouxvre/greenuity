@@ -77,3 +77,8 @@ document.getElementById("acceptBtn").addEventListener("click", async () => {
     }
   }
 });
+
+// Go back to profile page
+function goBack() {
+  window.location.href = "profile.html";
+}
