@@ -61,8 +61,8 @@
       window.location.href = "/pages/irrigation/irrigation.html";
     }
 
-    function goToEducation() {
-      window.location.href = "/pages/edukasi/edukasi.html";
+    function goToScan() {
+      window.location.href = "/pages/scan/scan-plant.html";
     }
 
     function goToEditProfile() {

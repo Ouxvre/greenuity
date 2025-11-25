@@ -5,8 +5,8 @@ function goToHome() {
 function goToMonitoring() {
   window.location.href = "../monitoring/monitoring.html";
 }
-function goToEducation() {
-  window.location.href = "../edukasi/edukasi.html";
+function goToScan() {
+  window.location.href = "../scan/scan-plant.html";
 }
 function goToIrrigation() {
   window.location.href = "../irrigation/irrigation.html";
