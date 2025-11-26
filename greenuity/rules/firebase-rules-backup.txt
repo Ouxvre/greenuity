@@ -1,0 +1,50 @@
+{
+  "rules": {
+    "devices": {
+      "$deviceId": {
+        // ESP32 boleh baca/tulis info dan current tanpa auth
+        "current": {
+          ".read": true,
+          ".write": true
+        },
+        "info": {
+          ".read": true,
+          ".write": true
+        },
+        "logs": {
+          ".read": true,
+          ".write": true
+        },
+
+        // Web app hanya boleh update control jika sudah memiliki device
+        "control": {
+          ".read": true,
+          ".write": "auth != null && root.child('devices').child($deviceId).child('info').child('owner_id').val() === auth.uid"
+        },
+
+        // Izin web app baca/write settings hanya jika device miliknya
+        "settings": {
+          ".read": "auth != null && root.child('devices').child($deviceId).child('info').child('owner_id').val() === auth.uid",
+          ".write": "auth != null && root.child('devices').child($deviceId).child('info').child('owner_id').val() === auth.uid"
+        }
+      }
+    },
+
+    "unclaimed_devices": {
+      ".read": true,
+      ".write": true
+    },
+
+    "pending_config": {
+      ".read": true,
+      ".write": true
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    }
+  }
+}

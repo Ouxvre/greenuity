@@ -807,8 +807,12 @@ void checkSerialCommands() {
       {
         Serial.println("🔥 FACTORY RESET!");
 
-        Preferences p;
+        // Tutup preferences utama
+        preferences.end();
+
+        // Hapus semua preferences di semua namespace
         const char *namespaces[] = { "smartfarm", "wifi", "settings", "greenuity" };
+        Preferences p;
         for (int i = 0; i < 4; i++) {
           p.begin(namespaces[i], false);
           p.clear();
