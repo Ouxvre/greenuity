@@ -148,8 +148,8 @@ function goToIrrigation() {
   window.location.href = "../irrigation/irrigation.html";
 }
 
-function goToScan() {
-  window.location.href = "../scan/scan-plant.html";
+function goToAnalysis() {
+  window.location.href = "../analysis/analysis.html";
 }
 
 function goToProfile() {

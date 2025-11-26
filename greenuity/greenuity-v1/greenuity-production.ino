@@ -1,10 +1,8 @@
-/* 
-  SmartFarm IoT - ESP32 Firmware v2.4 (Force-Unclaimed Fixed)
-  - Force unclaimed mode after factory reset
-  - Prevent ESP32 from writing /devices/<id> before pairing
-  - No duplicated unclaimed registration
+/*
+  SmartFarm IoT - ESP32 Firmware v2.3 (no mode toggle)
+  - Cleaned, removed mode/manual logic
+  - Manual override supported via pump_command
   - Stable control listener + schedule + sensor auto
-  - Cleaned setupFirebase() (no accidental provisioning)
 */
 
 #include <Arduino.h>
@@ -31,16 +29,18 @@
 #define DHT_PIN 4
 #define DHT_TYPE DHT22
 
+// Soil calibration - gunakan nilai nyata hasil kalibrasi
 constexpr int SOIL_WET = 1000;
 constexpr int SOIL_DRY = 3200;
 
-constexpr unsigned long SEND_INTERVAL = 15000UL;
-constexpr unsigned long CHECK_INTERVAL = 5000UL;
+// Timings
+constexpr unsigned long SEND_INTERVAL = 15000UL;  // 15s
+constexpr unsigned long CHECK_INTERVAL = 5000UL;  // 5s
 
 // ---------------- GLOBAL OBJECTS ----------------
-FirebaseData fbdo;
-FirebaseData streamConfig;
-FirebaseData streamControl;
+FirebaseData fbdo;           // main write/read
+FirebaseData streamConfig;   // listener for pending_config
+FirebaseData streamControl;  // combined listener for control
 
 FirebaseAuth auth;
 FirebaseConfig config;
@@ -50,6 +50,7 @@ WiFiManager wifiManager;
 BH1750 lightMeter;
 DHT dht(DHT_PIN, DHT_TYPE);
 
+// Sensor & status
 int soilMoisture = 0;
 int soilRaw = 0;
 float suhu = 0.0f;
@@ -61,14 +62,17 @@ bool isConnected = false;
 String currentSSID = "";
 String ownerID = "";
 
+// Pump control state
 bool pompaMenyala = false;
 int thresholdMin = 35;
 int thresholdMax = 75;
-int durasiPompa = 200;
+int durasiPompa = 200;  // default seconds
 unsigned long pompStartTime = 0;
 
+// Manual override flag (set when web manual command used)
 bool manualOverride = false;
 
+// schedule structure
 struct ScheduleItem {
   int hour;
   int minute;
@@ -76,15 +80,21 @@ struct ScheduleItem {
 };
 std::vector<ScheduleItem> schedules;
 
+// timing variables
 unsigned long lastSendTime = 0;
 unsigned long lastCheckTime = 0;
+
+// prevent double trigger for same minute
 int lastCheckedMinute = -1;
 
+// flags
 bool debugVerbose = false;
+
 bool configListenerActive = false;
 bool controlListenerActive = false;
 
 bool scheduleRunning = false;
+
 unsigned long lastFirebaseInit = 0;
 
 String pairingToken = "";
@@ -120,7 +130,7 @@ void setup() {
 
   pinMode(SOIL_SENSOR_PIN, INPUT);
   pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(RELAY_PIN, LOW);  // off at boot
 
   Wire.begin(21, 22);
   lightMeter.begin();
@@ -128,18 +138,20 @@ void setup() {
 
   preferences.begin("smartfarm", false);
 
-  // pairing token
+  // --- Generate or load pairing token ---
   if (preferences.isKey("pairing_token")) {
     pairingToken = preferences.getString("pairing_token", "");
     Serial.println("Pairing Token Loaded: " + pairingToken);
   } else {
+    // Generate 8-digit token
     uint32_t rnd = esp_random();
-    pairingToken = String((rnd % 90000000) + 10000000);
+    pairingToken = String((rnd % 90000000) + 10000000);  // 8 digit
     preferences.putString("pairing_token", pairingToken);
     Serial.println("Generated Pairing Token: " + pairingToken);
   }
 
   isProvisioned = preferences.getBool("provisioned", false);
+
   if (isProvisioned) {
     ownerID = preferences.getString("owner_id", "");
     Serial.println("✅ Device Provisioned sebelumnya");
@@ -147,19 +159,30 @@ void setup() {
     Serial.println("⚠ Device belum diklaim (unclaimed mode)");
   }
 
+
   WiFi.mode(WIFI_STA);
   setupWiFi();
 
+  // NTP
   configTime(7 * 3600, 0, "pool.ntp.org", "time.google.com");
 
   setupFirebase();
 
-  // -----------------------------------------------------------------------
-  // FORCE UNCLAIMED MODE FINAL – cleaned and non-duplicated
-  // -----------------------------------------------------------------------
-  if (!isProvisioned) {
-    Serial.println("🔧 FORCE UNCLAIMED MODE ACTIVE");
+  // check whether device registered
+  {
+    String devicePath = "/devices/" + String(DEVICE_ID) + "/info";
+    if (Firebase.ready() && Firebase.RTDB.pathExisted(&fbdo, devicePath.c_str())) {
+      Serial.println("🔍 Device already in /devices -> provisioned");
+      isProvisioned = true;
+      preferences.putBool("provisioned", true);
+    } else {
+      Serial.println("🔍 Device not registered in /devices");
+      // keep isProvisioned as stored
+    }
+  }
 
+  if (!isProvisioned) {
+    // register unclaimed
     String path = "/unclaimed_devices/" + String(DEVICE_ID);
     FirebaseJson json;
     json.set("status", "ready_to_claim");
@@ -169,24 +192,22 @@ void setup() {
     json.set("wifi_ssid", WiFi.SSID());
     json.set("ip_address", WiFi.localIP().toString());
     json.set("rssi", WiFi.RSSI());
-
     if (Firebase.RTDB.updateNode(&fbdo, path.c_str(), &json)) {
       Serial.println("✅ Registered as unclaimed device");
     } else {
-      Serial.println("❌ Failed to register unclaimed: " + fbdo.errorReason());
+      Serial.println("⚠ Failed to register unclaimed: " + fbdo.errorReason());
     }
-  }
-  // -----------------------------------------------------------------------
-
-  if (isProvisioned) {
+  } else {
+    // Load settings and schedule if already provisioned
     loadSettings();
     loadSchedule();
   }
 
-  setupConfigListener();
-  setupControlListener();
+  // listeners
+  setupConfigListener();   // pending_config listener
+  setupControlListener();  // combined control listener
 
-  Serial.println("\n✅ Setup complete v2.4 (force-unclaimed fixed)\n");
+  Serial.println("\n✅ Setup complete v2.3 (no mode toggle)\n");
 }
 
 // ---------------- LOOP ----------------
@@ -200,20 +221,31 @@ void loop() {
   } else if (!isConnected) {
     isConnected = true;
     Serial.println("✅ WiFi connected: " + WiFi.SSID());
+    // update online status in firebase if ready
+    if (Firebase.ready()) {
+      String statusPath = "/devices/" + String(DEVICE_ID) + "/info/status";
+      Firebase.RTDB.setString(&fbdo, statusPath.c_str(), "online");
+      String lastSeenPath = "/devices/" + String(DEVICE_ID) + "/info/last_seen";
+      FirebaseJson ts;
+      ts.set(".sv", "timestamp");
+      Firebase.RTDB.setJSON(&fbdo, lastSeenPath.c_str(), &ts);
+    }
   }
 
+  // --- Prevent frequent Firebase re-init ---
   if (!Firebase.ready() && millis() - lastFirebaseInit > 10000UL) {
     Serial.println("♻ Firebase not ready, reinitializing...");
     setupFirebase();
     lastFirebaseInit = millis();
   }
 
-  // detect pairing finished
+  // --- DETEKSI DEVICE DIKLAIM (PAIRING SUKSES) ---
   if (!isProvisioned && Firebase.ready()) {
     String path = "/devices/" + String(DEVICE_ID) + "/info/owner_id";
 
     if (Firebase.RTDB.getString(&fbdo, path.c_str())) {
       String owner = fbdo.stringData();
+
       if (owner.length() > 0) {
         Serial.println("🎉 Device baru saja DIKLAIM!");
 
@@ -236,6 +268,10 @@ void loop() {
   if (millis() - lastCheckTime >= CHECK_INTERVAL) {
     checkSchedule();
     checkAutoIrrigation();
+    if (!Firebase.ready() && pompaMenyala) {
+      Serial.println("🚨 Firebase offline while pump ON → forcing pump OFF");
+      turnPumpOff("failsafe");
+    }
     checkPumpTimer();
     lastCheckTime = millis();
   }
@@ -246,6 +282,31 @@ void loop() {
   }
 
   checkSerialCommands();
+
+  // ---- AUTO FACTORY RESET JIKA DEVICE DIHAPUS DI FIREBASE ----
+  static unsigned long lastCheckDelete = 0;
+  if (millis() - lastCheckDelete > 10000) {  // cek tiap 10 detik
+    lastCheckDelete = millis();
+
+    String devicePath = "/devices/" + String(DEVICE_ID) + "/info";
+
+    // jika path tidak ada → device sudah dihapus dari dashboard
+    if (Firebase.ready() && !Firebase.RTDB.pathExisted(&fbdo, devicePath.c_str())) {
+      Serial.println("❌ Device deleted in Firebase → factory reset");
+
+      // hapus semua prefs (wifi_ssid, owner_id, provisioned)
+      preferences.clear();
+      preferences.end();
+
+      // hapus WiFi config
+      wifiManager.resetSettings();
+      WiFi.disconnect(true, true);
+      delay(500);
+
+      // restart device agar masuk mode setup
+      ESP.restart();
+    }
+  }
 
   delay(200);
   yield();
@@ -262,9 +323,11 @@ void setupWiFi() {
   wifiManager.setDebugOutput(false);
   wifiManager.setConfigPortalTimeout(300);
 
+  // ---- Token Char ----
   char tokenChar[10];
   pairingToken.toCharArray(tokenChar, 10);
 
+  // ---- CUSTOM UI ----
   String html =
     "<style>"
     "body{font-family:Arial;background:#f3f6fa;margin:0;padding:20px;text-align:center;}"
@@ -273,7 +336,11 @@ void setupWiFi() {
     ".tokenBox{background:#e8f5ff;padding:12px;border-radius:12px;margin:15px 0;}"
     ".tokenLabel{font-size:14px;color:#1B4D57;font-weight:bold;}"
     ".tokenValue{font-size:28px;font-weight:bold;color:#1B4D57;letter-spacing:3px;}"
-    "#save,#wifi{display:none;}"
+    "input{width:100%;padding:12px;border-radius:10px;border:2px solid #ddd;font-size:16px;margin-top:10px;}"
+    "button{width:100%;padding:14px;border:none;border-radius:12px;font-size:18px;font-weight:bold;margin-top:15px;}"
+    ".btn-primary{background:#1B4D57;color:white;}"
+    ".btn-secondary{background:#e0e0e0;color:#333;}"
+    "#save, #wifi{display:none;} /* hide wifiManager default UI */"
     "</style>"
     "<div class='card'>"
     "<div class='title'>SmartFarm Setup</div>"
@@ -281,7 +348,8 @@ void setupWiFi() {
     "<div class='tokenLabel'>PAIRING TOKEN</div>"
     "<div class='tokenValue'>"
     + pairingToken + "</div>"
-                     "</div></div>";
+                     "</div>"
+                     "</div>";
 
   WiFiManagerParameter customUI(html.c_str());
   wifiManager.addParameter(&customUI);
@@ -293,13 +361,14 @@ void setupWiFi() {
   }
 
   Serial.println("\n✅ WiFi Connected!");
-  Serial.println("SSID   : " + WiFi.SSID());
-  Serial.println("IP     : " + WiFi.localIP().toString());
-  Serial.println("Signal : " + String(WiFi.RSSI()) + " dBm\n");
+  Serial.println("   SSID   : " + WiFi.SSID());
+  Serial.println("   IP     : " + WiFi.localIP().toString());
+  Serial.println("   Signal : " + String(WiFi.RSSI()) + " dBm\n");
 
   isConnected = true;
   currentSSID = WiFi.SSID();
 }
+
 
 // ---------------- FIREBASE ----------------
 void setupFirebase() {
@@ -307,15 +376,20 @@ void setupFirebase() {
   config.database_url = FIREBASE_HOST;
   config.signer.tokens.legacy_token = FIREBASE_AUTH;
   config.timeout.serverResponse = 20 * 1000;
-
   Firebase.reconnectWiFi(true);
   Firebase.begin(&config, &auth);
   fbdo.setResponseSize(8192);
 
   if (Firebase.ready()) {
     Serial.println("✅ Firebase initialized");
+    String statusPath = "/devices/" + String(DEVICE_ID) + "/info/status";
+    Firebase.RTDB.setString(&fbdo, statusPath.c_str(), "online");
+    String lastSeenPath = "/devices/" + String(DEVICE_ID) + "/info/last_seen";
+    FirebaseJson ts;
+    ts.set(".sv", "timestamp");
+    Firebase.RTDB.setJSON(&fbdo, lastSeenPath.c_str(), &ts);
   } else {
-    Serial.println("❌ Firebase init failed!");
+    Serial.println("❌ Firebase init failed: " + config.signer.tokens.status);
   }
 }
 
@@ -331,86 +405,75 @@ void setupConfigListener() {
     Firebase.RTDB.setStreamCallback(&streamConfig, onConfigChange, onStreamTimeout);
     Serial.println("✅ pending_config listener active");
   } else {
-    Serial.println("❌ Failed pending_config stream");
+    Serial.println("❌ Failed pending_config stream: " + streamConfig.errorReason());
   }
 }
 
 void onConfigChange(FirebaseStream data) {
   Serial.println("🔔 pending_config stream event");
-  if (data.dataType() != "json") return;
+  if (data.dataType() == "json") {
+    FirebaseJson json;
+    json.setJsonData(data.jsonString());
+    FirebaseJsonData result;
+    String newSSID = "", newPassword = "", newOwnerID = "", status = "";
+    if (json.get(result, "wifi_ssid")) newSSID = result.to<String>();
+    if (json.get(result, "wifi_password")) newPassword = result.to<String>();
+    if (json.get(result, "owner_id")) newOwnerID = result.to<String>();
+    if (json.get(result, "status")) status = result.to<String>();
 
-  FirebaseJson json;
-  json.setJsonData(data.jsonString());
-  FirebaseJsonData result;
+    if (status == "pending" && newSSID.length() > 0) {
+      Serial.println("🎯 New config received -> apply");
+      String configPath = "/pending_config/" + String(DEVICE_ID) + "/status";
+      Firebase.RTDB.setString(&fbdo, configPath.c_str(), "applying");
 
-  String newSSID = "", newPassword = "", newOwnerID = "", status = "";
+      preferences.putString("wifi_ssid", newSSID);
+      preferences.putString("wifi_password", newPassword);
+      preferences.putString("owner_id", newOwnerID);
+      preferences.putBool("provisioned", true);
 
-  if (json.get(result, "wifi_ssid")) {
-    newSSID = result.to<String>();
-  }
-  if (json.get(result, "wifi_password")) {
-    newPassword = result.to<String>();
-  }
-  if (json.get(result, "owner_id")) {
-    newOwnerID = result.to<String>();
-  }
-  if (json.get(result, "status")) {
-    status = result.to<String>();
-  }
-
-
-  if (status == "pending" && newSSID.length() > 0) {
-    Serial.println("🎯 Applying WiFi config...");
-
-    preferences.putString("wifi_ssid", newSSID);
-    preferences.putString("wifi_password", newPassword);
-    preferences.putString("owner_id", newOwnerID);
-    preferences.putBool("provisioned", true);
-
-    WiFi.disconnect();
-    delay(500);
-    WiFi.begin(newSSID.c_str(), newPassword.c_str());
-
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+      WiFi.disconnect();
       delay(500);
-      Serial.print(".");
-      attempts++;
-    }
+      WiFi.begin(newSSID.c_str(), newPassword.c_str());
+      int attempts = 0;
+      while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+      }
+      if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\n✅ Connected to new WiFi");
+        Firebase.RTDB.setString(&fbdo, configPath.c_str(), "connected");
 
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("\n✅ Connected to new WiFi");
-
-      // Write device to /devices/<id>
-      String devicePath = "/devices/" + String(DEVICE_ID) + "/info";
-      FirebaseJson json2;
-      json2.set("owner_id", newOwnerID);
-      json2.set("device_id", DEVICE_ID);
-      json2.set("status", "online");
-      json2.set("wifi_ssid", WiFi.SSID());
-      json2.set("ip_address", WiFi.localIP().toString());
-      json2.set("rssi", WiFi.RSSI());
-      json2.set("claimed_at/.sv", "timestamp");
-
-      Firebase.RTDB.updateNode(&fbdo, devicePath.c_str(), &json2);
-
-      Firebase.RTDB.deleteNode(&fbdo, ("/unclaimed_devices/" + String(DEVICE_ID)).c_str());
-      Firebase.RTDB.deleteNode(&fbdo, ("/pending_config/" + String(DEVICE_ID)).c_str());
-
-      Serial.println("✅ Device claimed");
-      isProvisioned = true;
-
-      loadSettings();
-      loadSchedule();
-    } else {
-      Serial.println("\n❌ Failed WiFi config → restart");
-      delay(2000);
-      ESP.restart();
+        // claim device
+        String devicePath = "/devices/" + String(DEVICE_ID) + "/info";
+        FirebaseJson json2;
+        json2.set("owner_id", newOwnerID);
+        json2.set("device_id", DEVICE_ID);
+        json2.set("status", "online");
+        json2.set("wifi_ssid", WiFi.SSID());
+        json2.set("ip_address", WiFi.localIP().toString());
+        json2.set("rssi", WiFi.RSSI());
+        json2.set("claimed_at/.sv", "timestamp");
+        if (Firebase.RTDB.updateNode(&fbdo, devicePath.c_str(), &json2)) {
+          Firebase.RTDB.deleteNode(&fbdo, ("/unclaimed_devices/" + String(DEVICE_ID)).c_str());
+          Firebase.RTDB.deleteNode(&fbdo, ("/pending_config/" + String(DEVICE_ID)).c_str());
+          Serial.println("✅ Device claimed");
+        }
+        isProvisioned = true;
+        ownerID = newOwnerID;
+        loadSettings();
+        loadSchedule();
+      } else {
+        Serial.println("\n❌ Failed to join new WiFi -> restart");
+        Firebase.RTDB.setString(&fbdo, configPath.c_str(), "connection_failed");
+        delay(2000);
+        ESP.restart();
+      }
     }
   }
 }
 
-// ---------------- CONTROL LISTENER ----------------
+// ---------------- CONTROL LISTENER (combined) ----------------
 void setupControlListener() {
   if (controlListenerActive) return;
   controlListenerActive = true;
@@ -422,76 +485,123 @@ void setupControlListener() {
     Firebase.RTDB.setStreamCallback(&streamControl, onControlChange, onStreamTimeout);
     Serial.println("✅ control listener active");
   } else {
-    Serial.println("❌ Failed control stream");
+    Serial.println("❌ Failed control stream: " + streamControl.errorReason());
   }
 }
 
 void onControlChange(FirebaseStream data) {
-  if (data.dataType() == "string") {
-    if (data.dataPath().endsWith("/pump_command")) {
-      String cmd = data.stringData();
+  Serial.println("🔔 control stream event -> path: " + data.dataPath());
 
-      if (cmd == "ON") {
-        manualOverride = true;
-        turnPumpOn("manual_command");
-      } else if (cmd == "OFF") {
-        manualOverride = false;
-        turnPumpOff("manual_command");
-      }
-
-      Firebase.RTDB.setString(&fbdo,
-                              ("/devices/" + String(DEVICE_ID) + "/control/pump_command").c_str(),
-                              "IDLE");
-    }
+  // ignore null event so pump doesn't turn off immediately
+  if (data.dataType() == "null") {
+    Serial.println("⚪ pump_command null ignored");
+    return;
   }
 
   if (data.dataType() == "json") {
-    loadSchedule();
+    String p = data.dataPath();
+    if (p.indexOf("schedule") >= 0 || p == "/") {
+      Serial.println("🔄 Schedule or control JSON changed -> reload schedule");
+      loadSchedule();
+    }
+    return;
   }
+
+  if (data.dataType() == "string") {
+    String dpath = data.dataPath();
+    String value = data.stringData();
+    Serial.println("   string event: " + dpath + " = " + value);
+
+    // only handle pump_command string events here
+    if (dpath.endsWith("/pump_command") || dpath == "/pump_command") {
+      Serial.println("🎮 pump_command: " + value);
+
+      if (value == "ON") {
+        // Manual override: set flag so auto won't immediately turn it off
+        manualOverride = true;
+        turnPumpOn("manual_command");
+      } else if (value == "OFF") {
+        turnPumpOff("manual_command");
+        manualOverride = false;
+      }
+
+      // stabilizer: write back IDLE to avoid null event when client deletes node
+      String cmdPath = "/devices/" + String(DEVICE_ID) + "/control/pump_command";
+      Firebase.RTDB.setString(&fbdo, cmdPath.c_str(), "IDLE");
+
+      return;  // handled
+    }
+  }
+
+  Serial.println("ℹ Unhandled data type/path: " + data.dataType() + " -> " + data.dataPath());
 }
 
 void onStreamTimeout(bool timeout) {
-  if (timeout) Serial.println("⚠ Stream timeout");
+  if (timeout) {
+    Serial.println("⚠ Stream timeout detected, waiting for Firebase to recover...");
+  }
 }
 
 // ---------------- LOADING SETTINGS ----------------
 void loadSettings() {
   Serial.println("⚙ Loading settings...");
-  String path = "/devices/" + String(DEVICE_ID) + "/settings";
-
-  if (Firebase.RTDB.getJSON(&fbdo, path.c_str())) {
+  String settingsPath = "/devices/" + String(DEVICE_ID) + "/settings";
+  if (Firebase.RTDB.getJSON(&fbdo, settingsPath.c_str())) {
     FirebaseJson json;
     json.setJsonData(fbdo.payload());
-
     FirebaseJsonData r;
-    if (json.get(r, "threshold_min")) {
-      thresholdMin = r.to<int>();
-    }
-    if (json.get(r, "threshold_max")) {
-      thresholdMax = r.to<int>();
-    }
-    if (json.get(r, "durasi_pompa")) {
-      durasiPompa = r.to<int>();
-    }
+    if (json.get(r, "threshold_min")) thresholdMin = r.to<int>();
+    if (json.get(r, "threshold_max")) thresholdMax = r.to<int>();
+    if (json.get(r, "durasi_pompa")) durasiPompa = r.to<int>();
+    Serial.printf("Loaded settings: thr %d-%d, dur %ds\n", thresholdMin, thresholdMax, durasiPompa);
+  } else {
+    Serial.println("⚠ Failed to fetch settings - using defaults");
   }
 }
 
-// ---------------- LOAD SCHEDULE ----------------
+// ---------------- LOAD SCHEDULE (robust) ----------------
 void loadSchedule() {
+  Serial.println("📅 Loading schedule from Firebase...");
   String path = "/devices/" + String(DEVICE_ID) + "/control/schedule/times";
   if (!Firebase.RTDB.getJSON(&fbdo, path.c_str())) {
+    Serial.println("⚠ No schedule or failed to load: " + fbdo.errorReason());
     schedules.clear();
     return;
   }
 
+  String payload = fbdo.payload();
+  if (payload.length() == 0) {
+    schedules.clear();
+    Serial.println("ℹ Schedule payload empty");
+    return;
+  }
+
   FirebaseJson json;
-  json.setJsonData(fbdo.payload());
+  json.setJsonData(payload);
+
+  // Cek tipe JSON manual (kompatibel semua versi FirebaseJson)
+  bool isArray = payload.startsWith("[");
+  bool isObject = payload.startsWith("{");
+
+  // Jika bukan object dan bukan array → error
+  if (!isArray && !isObject) {
+    Serial.println("⚠ Invalid schedule JSON format");
+    schedules.clear();
+    return;
+  }
+
   schedules.clear();
 
+  // Mulai iterator (versi lama: tanpa parameter)
   size_t count = json.iteratorBegin();
+  if (count == 0) {
+    Serial.println("ℹ No schedule entries found");
+    json.iteratorEnd();
+    return;
+  }
+
   for (size_t i = 0; i < count; i++) {
     FirebaseJson::IteratorValue it = json.valueAt(i);
-
     FirebaseJson entry;
     entry.setJsonData(it.value);
 
@@ -501,80 +611,117 @@ void loadSchedule() {
       s.hour = rh.to<int>();
       s.minute = rm.to<int>();
       s.duration = rd.to<int>();
-      schedules.push_back(s);
+      // validation
+      if (s.hour >= 0 && s.hour <= 23 && s.minute >= 0 && s.minute <= 59 && s.duration > 0) {
+        schedules.push_back(s);
+        Serial.printf("  + schedule: %02d:%02d dur %ds\n", s.hour, s.minute, s.duration);
+      } else {
+        Serial.println("  ! Skipping invalid schedule entry");
+      }
+    } else {
+      Serial.println("  ! Invalid schedule entry - missing fields");
     }
   }
   json.iteratorEnd();
+
+  // sort by time
+  std::sort(schedules.begin(), schedules.end(), [](const ScheduleItem &a, const ScheduleItem &b) {
+    if (a.hour != b.hour) return a.hour < b.hour;
+    return a.minute < b.minute;
+  });
+
+  Serial.printf("📌 Total schedules loaded: %d\n", (int)schedules.size());
 }
 
 // ---------------- PUMP CONTROL ----------------
 void turnPumpOn(const String &trigger) {
-  if (pompaMenyala) return;
+  if (pompaMenyala) {
+    Serial.println("⚠ Pump already ON");
+    return;
+  }
   digitalWrite(RELAY_PIN, HIGH);
   pompaMenyala = true;
   pompStartTime = millis();
-
-  Firebase.RTDB.setString(&fbdo,
-                          ("/devices/" + String(DEVICE_ID) + "/current/status_pompa").c_str(), "ON");
-
+  Serial.println("💧 PUMP ON (" + trigger + ") soil:" + String(soilMoisture) + "%");
+  Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/current/status_pompa").c_str(), "ON");
   logPumpActivity("pump_on", trigger);
 }
 
 void turnPumpOff(const String &trigger) {
-  if (!pompaMenyala) return;
+  if (!pompaMenyala) {
+    Serial.println("⚠ Pump already OFF");
+    return;
+  }
   digitalWrite(RELAY_PIN, LOW);
-
   pompaMenyala = false;
   unsigned long duration = (millis() - pompStartTime) / 1000UL;
-
-  Firebase.RTDB.setString(&fbdo,
-                          ("/devices/" + String(DEVICE_ID) + "/current/status_pompa").c_str(), "OFF");
-
+  Serial.println("🛑 PUMP OFF (" + trigger + ") duration: " + String(duration) + "s");
+  Firebase.RTDB.setString(&fbdo, ("/devices/" + String(DEVICE_ID) + "/current/status_pompa").c_str(), "OFF");
   logPumpActivity("pump_off", trigger);
 }
 
+// Push log entry
 void logPumpActivity(const String &action, const String &trigger) {
-  String path = "/devices/" + String(DEVICE_ID) + "/logs";
-
+  String logPath = "/devices/" + String(DEVICE_ID) + "/logs";
   FirebaseJson json;
   json.set("action", action);
   json.set("trigger", trigger);
   json.set("soil_moisture", soilMoisture);
   json.set("timestamp/.sv", "timestamp");
-
-  Firebase.RTDB.pushJSON(&fbdo, path.c_str(), &json);
+  if (!pompaMenyala && action == "pump_off") {
+    unsigned long duration = (millis() - pompStartTime) / 1000UL;
+    json.set("duration", (int)duration);
+  }
+  Firebase.RTDB.pushJSON(&fbdo, logPath.c_str(), &json);
 }
 
 // ---------------- AUTO IRRIGATION ----------------
 void checkAutoIrrigation() {
+  if (scheduleRunning) return;  // schedule has priority when running
   if (!isProvisioned) return;
-  if (scheduleRunning) return;
-  if (manualOverride) return;
 
-  if (!pompaMenyala && soilMoisture < thresholdMin)
+  // If manual override active, do not let auto turn the pump OFF or ON
+  if (manualOverride) {
+    if (debugVerbose) Serial.println("ℹ manualOverride active -> skipping auto irrigation");
+    return;
+  }
+
+  if (!pompaMenyala && soilMoisture < thresholdMin) {
+    Serial.println("Auto irrigation -> soil below threshold");
     turnPumpOn("auto");
-  else if (pompaMenyala && soilMoisture > thresholdMax)
+  } else if (pompaMenyala && soilMoisture > thresholdMax) {
+    Serial.println("Auto irrigation -> soil above max -> turning off");
     turnPumpOff("auto");
+  }
 }
 
 // ---------------- SCHEDULE CHECK ----------------
 void checkSchedule() {
-  if (!isProvisioned) return;
-  if (schedules.empty()) return;
+  if (!isProvisioned || schedules.empty()) return;
 
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) return;
 
-  int h = timeinfo.tm_hour;
-  int m = timeinfo.tm_min;
+  int hour = timeinfo.tm_hour;
+  int minute = timeinfo.tm_min;
 
-  if (lastCheckedMinute == m) return;
-  lastCheckedMinute = m;
+  // prevent double trigger
+  if (lastCheckedMinute == minute) return;
+  lastCheckedMinute = minute;
 
   for (auto &s : schedules) {
-    if (s.hour == h && s.minute == m) {
+    if (s.hour == hour && s.minute == minute) {
+      if (pompaMenyala) {
+        Serial.println("Schedule match but pump already ON -> skip");
+        return;
+      }
+
+      Serial.printf("🚿 Running schedule %02d:%02d for %ds\n", s.hour, s.minute, s.duration);
+
       scheduleRunning = true;
       durasiPompa = s.duration;
+
+      // schedule run should not set manualOverride (it is separate)
       turnPumpOn("schedule");
       return;
     }
@@ -584,10 +731,11 @@ void checkSchedule() {
 // ---------------- PUMP TIMER ----------------
 void checkPumpTimer() {
   if (!pompaMenyala) return;
-
   unsigned long elapsed = (millis() - pompStartTime) / 1000UL;
   if (elapsed >= (unsigned long)durasiPompa) {
+    Serial.println("⏰ Pump timer reached, turning off");
     scheduleRunning = false;
+    // When timer turns off after schedule, ensure manualOverride is not left on incorrectly
     manualOverride = false;
     turnPumpOff("timer");
   }
@@ -596,31 +744,36 @@ void checkPumpTimer() {
 // ---------------- SENSORS ----------------
 void readSensors() {
   soilRaw = analogRead(SOIL_SENSOR_PIN);
+  // map using calibration constants (SOIL_DRY -> SOIL_WET)
   soilMoisture = map(soilRaw, SOIL_DRY, SOIL_WET, 0, 100);
   soilMoisture = constrain(soilMoisture, 0, 100);
 
   suhu = dht.readTemperature();
   kelembapanUdara = dht.readHumidity();
   if (isnan(suhu) || isnan(kelembapanUdara)) {
-    suhu = 0;
-    kelembapanUdara = 0;
+    suhu = 0.0f;
+    kelembapanUdara = 0.0f;
   }
 
-  intensitasCahaya = lightMeter.readLightLevel();
-  if (intensitasCahaya < 0) intensitasCahaya = 0;
+  float lx = lightMeter.readLightLevel();
+  intensitasCahaya = (lx < 0.0f) ? 0.0f : lx;
 
   Serial.printf("📊 Soil:%d%% raw:%d | Temp:%.1fC RH:%.1f%% | Light:%.0f lx | Pump:%s\n",
-                soilMoisture, soilRaw, suhu, kelembapanUdara, intensitasCahaya,
-                pompaMenyala ? "ON" : "OFF");
+                soilMoisture, soilRaw, suhu, kelembapanUdara, intensitasCahaya, pompaMenyala ? "ON" : "OFF");
 }
 
 // ---------------- SEND TO FIREBASE ----------------
 void sendToFirebase() {
-  if (!isProvisioned) return;
-  if (!Firebase.ready()) return;
+  if (!isProvisioned) {
+    if (debugVerbose) Serial.println("⚠ Device not provisioned -> skip send");
+    return;
+  }
+  if (!Firebase.ready()) {
+    if (debugVerbose) Serial.println("⚠ Firebase not ready -> skip");
+    return;
+  }
 
   String path = "/devices/" + String(DEVICE_ID) + "/current";
-
   FirebaseJson json;
   json.set("kelembapan_tanah", soilMoisture);
   json.set("raw_value", soilRaw);
@@ -630,40 +783,39 @@ void sendToFirebase() {
   json.set("status_pompa", pompaMenyala ? "ON" : "OFF");
   json.set("timestamp/.sv", "timestamp");
 
-  Firebase.RTDB.updateNode(&fbdo, path.c_str(), &json);
-
-  String infoPath = "/devices/" + String(DEVICE_ID) + "/info";
-  FirebaseJson info;
-
-  info.set("status", "online");
-  info.set("rssi", WiFi.RSSI());
-  info.set("ip_address", WiFi.localIP().toString());
-  info.set("last_seen/.sv", "timestamp");
-
-  Firebase.RTDB.updateNode(&fbdo, infoPath.c_str(), &info);
+  if (Firebase.RTDB.updateNode(&fbdo, path.c_str(), &json)) {
+    if (debugVerbose) Serial.println("✅ sensor data updated");
+    // update info block
+    String infoPath = "/devices/" + String(DEVICE_ID) + "/info";
+    FirebaseJson info;
+    info.set("status", "online");
+    info.set("rssi", WiFi.RSSI());
+    info.set("ip_address", WiFi.localIP().toString());
+    info.set("last_seen/.sv", "timestamp");
+    Firebase.RTDB.updateNode(&fbdo, infoPath.c_str(), &info);
+  } else {
+    Serial.println("❌ Failed update sensor: " + fbdo.errorReason());
+  }
 }
 
 // ---------------- SERIAL COMMANDS ----------------
 void checkSerialCommands() {
   if (!Serial.available()) return;
-
   char cmd = Serial.read();
   switch (cmd) {
     case 'r':
       {
         Serial.println("🔥 FACTORY RESET!");
 
-        preferences.end();
-
-        const char *namespaces[] = { "smartfarm", "wifi", "settings", "greenuity" };
         Preferences p;
-
+        const char *namespaces[] = { "smartfarm", "wifi", "settings", "greenuity" };
         for (int i = 0; i < 4; i++) {
           p.begin(namespaces[i], false);
           p.clear();
           p.end();
         }
 
+        // Reset WiFi config ESP32
         wifiManager.resetSettings();
         WiFi.disconnect(true, true);
 
@@ -671,29 +823,24 @@ void checkSerialCommands() {
         ESP.restart();
         break;
       }
-
     case 'i':
       printDeviceInfo();
       break;
-
     case 's':
       readSensors();
       break;
-
     case 't':
       sendToFirebase();
       break;
-
     case 'p':
       if (pompaMenyala) {
-        manualOverride = false;
         turnPumpOff("serial");
+        manualOverride = false;
       } else {
-        manualOverride = true;
         turnPumpOn("serial");
+        manualOverride = true;
       }
       break;
-
     case 'd':
       Serial.println("📴 Forget WiFi & restart");
       preferences.clear();
@@ -703,13 +850,14 @@ void checkSerialCommands() {
       delay(500);
       ESP.restart();
       break;
-
     case 'l':
       loadSettings();
       break;
-
     case 'h':
       printHelp();
+      break;
+    default:
+      // ignore unknown
       break;
   }
 }
@@ -719,7 +867,7 @@ void printHeader() {
   Serial.println("\n╔══════════════════════════════════════╗");
   Serial.println("║   SmartFarm IoT - Cloud Ready        ║");
   Serial.println("║   Device: " + String(DEVICE_ID) + "           ║");
-  Serial.println("║   Firmware: v2.4 (Force Unclaimed)   ║");
+  Serial.println("║   Firmware: v2.3 (No mode toggle)    ║");
   Serial.println("╚══════════════════════════════════════╝\n");
 }
 
@@ -738,13 +886,13 @@ void printDeviceInfo() {
 
 void printHelp() {
   Serial.println("\n═══════ SERIAL COMMANDS ═══════");
-  Serial.println("r - Reset device (factory reset)");
+  Serial.println("r - Reset device (clear all settings)");
   Serial.println("i - Show device info");
   Serial.println("s - Read sensors manually");
   Serial.println("t - Test send data to Firebase");
-  Serial.println("p - Toggle pump ON/OFF");
-  Serial.println("d - Forget WiFi");
-  Serial.println("l - Reload settings");
+  Serial.println("p - Toggle pump ON/OFF (serial)");
+  Serial.println("d - Disconnect WiFi & restart");
+  Serial.println("l - Reload settings from Firebase");
   Serial.println("h - Show this help");
   Serial.println("═══════════════════════════════\n");
 }

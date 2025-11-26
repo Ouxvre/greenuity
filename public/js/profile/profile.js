@@ -61,8 +61,8 @@
       window.location.href = "/pages/irrigation/irrigation.html";
     }
 
-    function goToScan() {
-      window.location.href = "/pages/scan/scan-plant.html";
+    function goToAnalysis() {
+      window.location.href = "/pages/analysis/analysis.html";
     }
 
     function goToEditProfile() {
