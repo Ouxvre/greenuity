@@ -1,5 +1,5 @@
 function goToHome() {
-    window.location.href = "/pages/home/home.html";
+    window.location.href = "/pages/dashboard/dashboard.html";
 }
 
 function goToMonitoring() {
