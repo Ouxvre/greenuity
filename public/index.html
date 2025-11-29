@@ -9,46 +9,104 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- google font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
 
     <link
       rel="icon"
       type="image/png"
       href="/../assets/logo/logo-greenuity.svg"
     />
+    <link rel="manifest" href="/manifest.json" />
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log(
+                "ServiceWorker registration successful with scope: ",
+                registration.scope
+              );
+            })
+            .catch((err) => {
+              console.log("ServiceWorker registration failed: ", err);
+            });
+        });
+      }
+    </script>
 
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            colors: {
-              primary: "#7CB342",
-              secondary: "#558B2F",
-              dark: "#33691E",
-            },
             fontFamily: {
-              poppins: ["Poppins", "sans-serif"],
+              sans: ['"Plus Jakarta Sans"', "sans-serif"],
+              heading: ['"Outfit"', "sans-serif"],
+            },
+            colors: {
+              primary: {
+                DEFAULT: "#7CB342",
+                50: "#F1F8E9",
+                100: "#DCEDC8",
+                200: "#C5E1A5",
+                300: "#AED581",
+                400: "#9CCC65",
+                500: "#8BC34A",
+                600: "#7CB342",
+                700: "#689F38",
+                800: "#558B2F",
+                900: "#33691E",
+              },
+              secondary: "#2E7D32",
+              dark: "#1B5E20",
             },
           },
         },
       };
     </script>
     <style>
-      .hero-overlay {
-        background: linear-gradient(
-          to right,
-          rgba(0, 0, 0, 0.3),
-          rgba(0, 0, 0, 0)
-        );
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        scroll-behavior: smooth;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "Outfit", sans-serif;
+      }
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .hero-gradient {
+        background: linear-gradient(135deg, #f1f8e9 0%, #ffffff 100%);
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
       }
     </style>
   </head>
-  <body class="bg-gray-50 font-poppins">
+  <body class="bg-gray-50 text-gray-800 overflow-x-hidden">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm fixed w-full top-0 z-50">
+    <nav class="glass-nav fixed w-full top-0 z-50 transition-all duration-300">
       <div class="container mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
           <!-- Logo -->
@@ -72,11 +130,6 @@
               href="#layanan"
               class="text-gray-700 hover:text-primary font-medium transition"
               >Layanan</a
-            >
-            <a
-              href="#cara-kerja"
-              class="text-gray-700 hover:text-primary font-medium transition"
-              >Cara Kerja</a
             >
             <a
               href="#faq"
@@ -147,11 +200,6 @@
             >Layanan</a
           >
           <a
-            href="#cara-kerja"
-            class="block text-gray-700 hover:text-primary font-medium"
-            >Cara Kerja</a
-          >
-          <a
             href="#faq"
             class="block text-gray-700 hover:text-primary font-medium"
             >FAQ</a
@@ -171,106 +219,226 @@
     </nav>
 
     <!-- Hero Section -->
-    <section id="beranda" class="mt-16 relative">
-      <div
-        class="relative h-[500px] md:h-[600px] overflow-hidden rounded-3xl mx-6 mt-20"
-      >
-        <!-- Background Image -->
-        <img
-          src="/assets/image_header.jpg"
-          alt="Smart Farming"
-          class="absolute inset-0 w-full h-full object-cover"
-        />
-
-        <!-- Overlay -->
-        <div class="absolute inset-0 hero-overlay"></div>
-
-        <!-- Content -->
-        <div class="relative container mx-auto px-6 h-full flex items-center">
-          <div class="max-w-2xl text-white">
+    <section
+      id="beranda"
+      class="pt-32 pb-20 lg:pt-40 lg:pb-28 hero-gradient overflow-hidden"
+    >
+      <div class="container mx-auto px-6">
+        <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          <!-- Text Content -->
+          <div class="lg:w-1/2" data-aos="fade-right" data-aos-duration="1000">
+            <div
+              class="inline-block px-4 py-2 bg-primary-100 text-primary-800 rounded-full text-sm font-semibold mb-6"
+            >
+              🌱 Masa Depan Pertanian Indonesia
+            </div>
             <h1
-              class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight"
+              class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6"
             >
-              Smart Farming yang Mengubah Cara Anda Bertani.
+              Smart Farming untuk
+              <span class="text-primary-600">Hasil Panen</span> yang Lebih Baik
             </h1>
-            <p class="text-lg md:text-xl mb-8 text-white/90">
-              Pantau lahan pertanian Anda dengan teknologi IoT modern untuk
-              hasil panen yang lebih baik.
+            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+              Tingkatkan produktivitas lahan Anda dengan teknologi IoT canggih.
+              Pantau, analisis, dan optimalkan pertanian Anda dari mana saja,
+              kapan saja.
             </p>
-            <button
-              onclick="window.location.href='https://wa.me/6289668034206'"
-              target="_blank"
-              class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white px-8 py-4 rounded-full font-semibold text-lg transition shadow-2xl hover:shadow-3xl"
-            >
-              <span>Hubungi Kami</span>
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div class="flex flex-col sm:flex-row gap-4">
+              <button
+                onclick="window.location.href='https://wa.me/6289668034206'"
+                class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-semibold text-lg transition-all shadow-lg hover:shadow-primary-500/30 flex items-center justify-center gap-2"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
-            </button>
+                <span>Mulai Sekarang</span>
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div class="mt-12 flex items-center gap-8 text-gray-500">
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-6 h-6 text-primary-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span class="text-sm font-medium">Terverifikasi</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-6 h-6 text-primary-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span class="text-sm font-medium">Real-time Data</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image/Visual -->
+          <div
+            class="lg:w-1/2 relative"
+            data-aos="fade-left"
+            data-aos-duration="1000"
+          >
+            <div
+              class="relative z-10 rounded-3xl overflow-hidden shadow-2xl border-8 border-white"
+            >
+              <img
+                src="/assets/image_header.jpg"
+                alt="Smart Farming Dashboard"
+                class="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
+              />
+            </div>
+            <!-- Decorative Elements -->
+            <div
+              class="absolute -top-10 -right-10 w-64 h-64 bg-primary-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"
+            ></div>
+            <div
+              class="absolute -bottom-10 -left-10 w-64 h-64 bg-secondary rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"
+            ></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Features Section -->
-    <section class="py-20 px-6">
+    <section class="py-24 px-6 bg-white">
       <div class="container mx-auto">
-        <div class="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
           <!-- Image Grid -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-6" data-aos="fade-up">
+            <div class="space-y-6 mt-12">
               <img
                 src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=400"
                 alt="Farming 1"
-                class="rounded-2xl w-full h-48 object-cover shadow-lg"
+                class="rounded-2xl w-full h-64 object-cover shadow-lg hover:shadow-xl transition-shadow duration-300"
               />
               <img
                 src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400"
                 alt="Farming 2"
-                class="rounded-2xl w-full h-64 object-cover shadow-lg"
+                class="rounded-2xl w-full h-48 object-cover shadow-lg hover:shadow-xl transition-shadow duration-300"
               />
             </div>
-            <div class="space-y-4 pt-8">
+            <div class="space-y-6">
               <img
                 src="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=400"
                 alt="Farming 3"
-                class="rounded-2xl w-full h-64 object-cover shadow-lg"
+                class="rounded-2xl w-full h-48 object-cover shadow-lg hover:shadow-xl transition-shadow duration-300"
               />
               <img
                 src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=400"
                 alt="Farming 4"
-                class="rounded-2xl w-full h-48 object-cover shadow-lg"
+                class="rounded-2xl w-full h-64 object-cover shadow-lg hover:shadow-xl transition-shadow duration-300"
               />
             </div>
           </div>
 
           <!-- Content -->
-          <div>
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-              Powering Farm With Clean Energy
+          <div data-aos="fade-left">
+            <div
+              class="inline-block px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-semibold mb-6"
+            >
+              ⚡ Teknologi Terbarukan
+            </div>
+            <h2
+              class="text-3xl md:text-4xl font-bold text-gray-900 mb-6 font-heading"
+            >
+              Energi Bersih untuk Pertanian Masa Depan
             </h2>
-            <p class="text-gray-600 leading-relaxed mb-8">
-              Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Odipsum
-              ante qulrna venenaitis ac. Donecet rhcrus sed est. Nunc nisi
-              feugist ultrices nunc nonvenelis velit
+            <p class="text-gray-600 leading-relaxed mb-8 text-lg">
+              Kami mengintegrasikan panel surya dan sistem manajemen energi
+              cerdas untuk memastikan pertanian Anda berjalan efisien, hemat
+              biaya, dan ramah lingkungan. Kurangi jejak karbon sambil
+              meningkatkan hasil panen.
             </p>
+
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start gap-4">
+                <div
+                  class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 text-primary-600"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">Hemat Energi</h4>
+                  <p class="text-sm text-gray-600">
+                    Optimasi penggunaan daya hingga 40%.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4">
+                <div
+                  class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 text-primary-600"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">Ramah Lingkungan</h4>
+                  <p class="text-sm text-gray-600">
+                    Mendukung keberlanjutan ekosistem.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <button
               onclick="window.location.href='#layanan'"
-              class="inline-flex items-center gap-2 bg-primary hover:bg-secondary text-white px-6 py-3 rounded-full font-semibold transition shadow-lg hover:shadow-xl"
+              class="inline-flex items-center gap-2 text-primary-600 font-bold hover:text-primary-700 transition group"
             >
-              <span>Learn More</span>
+              <span>Pelajari Lebih Lanjut</span>
               <svg
-                class="w-5 h-5"
+                class="w-5 h-5 transform group-hover:translate-x-1 transition"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -279,7 +447,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
                 />
               </svg>
             </button>
@@ -289,27 +457,32 @@
     </section>
 
     <!-- Services Section -->
-    <section id="layanan" class="py-20 px-6 bg-white">
-      <div class="container mx-auto max-w-6xl">
-        <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-            Layanan Kami
+    <section id="layanan" class="py-24 px-6 bg-gray-50">
+      <div class="container mx-auto max-w-7xl">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <h2
+            class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-heading"
+          >
+            Layanan Unggulan
           </h2>
-          <p class="text-gray-600 max-w-2xl mx-auto">
-            Solusi lengkap untuk pertanian modern dengan teknologi IoT terdepan
+          <p class="text-gray-600 max-w-2xl mx-auto text-lg">
+            Solusi komprehensif untuk modernisasi pertanian Anda dengan
+            teknologi terkini.
           </p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
           <!-- Service 1 -->
           <div
-            class="bg-gradient-to-br from-primary/5 to-white rounded-3xl p-8 hover:shadow-xl transition"
+            class="bg-white rounded-3xl p-8 card-hover border border-gray-100"
+            data-aos="fade-up"
+            data-aos-delay="100"
           >
             <div
-              class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6"
+              class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-6 text-primary-600"
             >
               <svg
-                class="w-8 h-8 text-white"
+                class="w-8 h-8"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -322,24 +495,26 @@
                 />
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-3">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
               Monitoring Real-time
             </h3>
-            <p class="text-gray-600">
+            <p class="text-gray-600 leading-relaxed">
               Pantau kondisi tanah, suhu, dan kelembapan secara langsung dari
-              smartphone Anda
+              smartphone Anda dengan akurasi tinggi.
             </p>
           </div>
 
           <!-- Service 2 -->
           <div
-            class="bg-gradient-to-br from-primary/5 to-white rounded-3xl p-8 hover:shadow-xl transition"
+            class="bg-white rounded-3xl p-8 card-hover border border-gray-100"
+            data-aos="fade-up"
+            data-aos-delay="200"
           >
             <div
-              class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6"
+              class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-6 text-primary-600"
             >
               <svg
-                class="w-8 h-8 text-white"
+                class="w-8 h-8"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -352,24 +527,26 @@
                 />
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-3">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
               Irigasi Otomatis
             </h3>
-            <p class="text-gray-600">
-              Sistem penyiraman cerdas yang menghemat air dan waktu Anda secara
-              signifikan
+            <p class="text-gray-600 leading-relaxed">
+              Sistem penyiraman cerdas berbasis sensor yang menghemat air hingga
+              50% dan waktu Anda secara signifikan.
             </p>
           </div>
 
           <!-- Service 3 -->
           <div
-            class="bg-gradient-to-br from-primary/5 to-white rounded-3xl p-8 hover:shadow-xl transition"
+            class="bg-white rounded-3xl p-8 card-hover border border-gray-100"
+            data-aos="fade-up"
+            data-aos-delay="300"
           >
             <div
-              class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6"
+              class="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-6 text-primary-600"
             >
               <svg
-                class="w-8 h-8 text-white"
+                class="w-8 h-8"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -382,13 +559,264 @@
                 />
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-3">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
               Notifikasi Pintar
             </h3>
-            <p class="text-gray-600">
-              Dapatkan peringatan otomatis untuk kondisi tanah yang memerlukan
-              perhatian
+            <p class="text-gray-600 leading-relaxed">
+              Dapatkan peringatan dini otomatis untuk kondisi tanah kritis atau
+              anomali cuaca yang memerlukan perhatian.
             </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-24 px-6 bg-white">
+      <div class="container mx-auto max-w-4xl">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <h2
+            class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-heading"
+          >
+            Pertanyaan Umum
+          </h2>
+          <p class="text-gray-600 text-lg">
+            Jawaban untuk pertanyaan yang sering diajukan tentang Greenuity.
+          </p>
+        </div>
+
+        <div class="space-y-4" data-aos="fade-up" data-aos-delay="100">
+          <!-- FAQ Item 1 -->
+          <details
+            class="group bg-gray-50 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer border border-gray-100 hover:border-primary-200 transition-colors duration-300"
+          >
+            <summary
+              class="flex items-center justify-between gap-1.5 text-gray-900 font-bold text-lg"
+            >
+              <span>Bagaimana cara kerja sistem monitoring Greenuity?</span>
+              <span class="relative size-5 shrink-0">
+                <svg
+                  class="absolute inset-0 size-5 opacity-100 group-open:opacity-0 transition-opacity duration-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <svg
+                  class="absolute inset-0 size-5 opacity-0 group-open:opacity-100 transition-opacity duration-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M20 12H4"
+                  />
+                </svg>
+              </span>
+            </summary>
+            <p class="mt-4 leading-relaxed text-gray-600">
+              Sistem kami menggunakan sensor IoT yang ditanam di lahan Anda
+              untuk mengukur kelembapan tanah, suhu, dan pH. Data dikirim secara
+              real-time ke aplikasi Greenuity di smartphone Anda, memungkinkan
+              Anda memantau kondisi lahan kapan saja.
+            </p>
+          </details>
+
+          <!-- FAQ Item 2 -->
+          <details
+            class="group bg-gray-50 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer border border-gray-100 hover:border-primary-200 transition-colors duration-300"
+          >
+            <summary
+              class="flex items-center justify-between gap-1.5 text-gray-900 font-bold text-lg"
+            >
+              <span>Apakah saya perlu koneksi internet di lahan?</span>
+              <span class="relative size-5 shrink-0">
+                <svg
+                  class="absolute inset-0 size-5 opacity-100 group-open:opacity-0 transition-opacity duration-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <svg
+                  class="absolute inset-0 size-5 opacity-0 group-open:opacity-100 transition-opacity duration-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M20 12H4"
+                  />
+                </svg>
+              </span>
+            </summary>
+            <p class="mt-4 leading-relaxed text-gray-600">
+              Ya, namun perangkat kami didesain untuk bekerja dengan sinyal
+              seluler minimal (2G/3G) atau jaringan LoRaWAN, sehingga tetap
+              efektif di daerah terpencil.
+            </p>
+          </details>
+
+          <!-- FAQ Item 3 -->
+          <details
+            class="group bg-gray-50 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer border border-gray-100 hover:border-primary-200 transition-colors duration-300"
+          >
+            <summary
+              class="flex items-center justify-between gap-1.5 text-gray-900 font-bold text-lg"
+            >
+              <span>Berapa biaya berlangganan layanan ini?</span>
+              <span class="relative size-5 shrink-0">
+                <svg
+                  class="absolute inset-0 size-5 opacity-100 group-open:opacity-0 transition-opacity duration-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <svg
+                  class="absolute inset-0 size-5 opacity-0 group-open:opacity-100 transition-opacity duration-300"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M20 12H4"
+                  />
+                </svg>
+              </span>
+            </summary>
+            <p class="mt-4 leading-relaxed text-gray-600">
+              Kami menawarkan paket fleksibel mulai dari gratis untuk pemula
+              hingga paket premium untuk perusahaan besar. Hubungi tim sales
+              kami untuk penawaran khusus.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimoni" class="py-24 px-6 bg-gray-50">
+      <div class="container mx-auto max-w-7xl">
+        <div class="text-center mb-16" data-aos="fade-up">
+          <h2
+            class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-heading"
+          >
+            Apa Kata Mereka?
+          </h2>
+          <p class="text-gray-600 text-lg">
+            Cerita sukses dari para petani yang telah beralih ke pertanian
+            cerdas.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Testimonial 1 -->
+          <div
+            class="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div class="flex items-center gap-4 mb-6">
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces"
+                alt="User"
+                class="w-14 h-14 rounded-full object-cover"
+              />
+              <div>
+                <h4 class="font-bold text-gray-900">Budi Santoso</h4>
+                <p class="text-sm text-primary-600">Petani Padi, Karawang</p>
+              </div>
+            </div>
+            <p class="text-gray-600 leading-relaxed italic">
+              "Sejak menggunakan Greenuity, hasil panen saya meningkat 30%. Saya
+              bisa memantau irigasi dari rumah tanpa harus bolak-balik ke sawah
+              setiap hari."
+            </p>
+            <div class="flex text-yellow-400 mt-4">★★★★★</div>
+          </div>
+
+          <!-- Testimonial 2 -->
+          <div
+            class="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div class="flex items-center gap-4 mb-6">
+              <img
+                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces"
+                alt="User"
+                class="w-14 h-14 rounded-full object-cover"
+              />
+              <div>
+                <h4 class="font-bold text-gray-900">Siti Aminah</h4>
+                <p class="text-sm text-primary-600">Pemilik Kebun Hidroponik</p>
+              </div>
+            </div>
+            <p class="text-gray-600 leading-relaxed italic">
+              "Sistem notifikasinya sangat membantu! Saya langsung tahu jika pH
+              air berubah drastis, sehingga tanaman saya selamat dari gagal
+              panen."
+            </p>
+            <div class="flex text-yellow-400 mt-4">★★★★★</div>
+          </div>
+
+          <!-- Testimonial 3 -->
+          <div
+            class="bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            <div class="flex items-center gap-4 mb-6">
+              <img
+                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces"
+                alt="User"
+                class="w-14 h-14 rounded-full object-cover"
+              />
+              <div>
+                <h4 class="font-bold text-gray-900">Ahmad Hidayat</h4>
+                <p class="text-sm text-primary-600">Petani Cabai, Malang</p>
+              </div>
+            </div>
+            <p class="text-gray-600 leading-relaxed italic">
+              "Teknologi yang mudah digunakan bahkan untuk orang tua seperti
+              saya. Tim supportnya juga sangat ramah dan membantu saat
+              pemasangan."
+            </p>
+            <div class="flex text-yellow-400 mt-4">★★★★★</div>
           </div>
         </div>
       </div>
@@ -396,102 +824,173 @@
 
     <!-- CTA Section -->
     <section class="py-20 px-6">
-      <div class="container mx-auto max-w-4xl">
+      <div class="container mx-auto max-w-5xl">
         <div
-          class="bg-gradient-to-r from-primary to-secondary rounded-3xl p-12 text-center text-white shadow-2xl"
+          class="bg-primary-600 rounded-[2.5rem] p-12 md:p-16 text-center text-white shadow-2xl relative overflow-hidden"
+          data-aos="zoom-in"
         >
-          <h2 class="text-3xl md:text-4xl font-bold mb-4">
-            Siap Mengubah Cara Bertani Anda?
-          </h2>
-          <p class="text-xl mb-8 text-white/90">
-            Bergabunglah dengan ribuan petani yang sudah merasakan manfaatnya
-          </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onclick="window.location.href='register.html'"
-              class="bg-white text-primary px-8 py-4 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"
+          <!-- Background Pattern -->
+          <div class="absolute inset-0 opacity-10">
+            <svg
+              class="w-full h-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
             >
-              Mulai Sekarang
-            </button>
-            <button
-              onclick="window.location.href='#tentang-kami'"
-              class="border-2 border-white text-white px-8 py-4 rounded-full font-bold hover:bg-white/10 transition"
-            >
-              Pelajari Lebih Lanjut
-            </button>
+              <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
+            </svg>
+          </div>
+
+          <div class="relative z-10">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 font-heading">
+              Siap Mengubah Cara Bertani Anda?
+            </h2>
+            <p class="text-xl mb-10 text-primary-100 max-w-2xl mx-auto">
+              Bergabunglah dengan ribuan petani modern yang telah meningkatkan
+              hasil panen mereka bersama Greenuity.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onclick="window.location.href='register.html'"
+                class="bg-white text-primary-700 px-10 py-4 rounded-full font-bold hover:bg-gray-50 transition shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Mulai Sekarang Gratis
+              </button>
+              <button
+                onclick="window.location.href='#tentang-kami'"
+                class="border-2 border-primary-200 text-white px-10 py-4 rounded-full font-bold hover:bg-primary-700/50 transition"
+              >
+                Pelajari Lebih Lanjut
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12 px-6">
-      <div class="container mx-auto max-w-6xl">
-        <div class="grid md:grid-cols-4 gap-8 mb-8">
-          <!-- Brand -->
+    <footer class="bg-[#0B0F19] text-white pt-20 pb-10 px-6">
+      <div class="container mx-auto max-w-7xl">
+        <!-- Top Links -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-12 mb-24 text-sm">
           <div>
-            <div class="flex items-center gap-2 mb-4">
-              <img
-                src="/assets/logo/logo-greenuity.svg"
-                alt="logo-greenuity"
-                class="w-10 mb-4"
-              />
-              <span class="text-2xl font-bold">Greenuity</span>
-            </div>
-            <p class="text-gray-400">
-              Smart farming untuk masa depan pertanian Indonesia
-            </p>
-          </div>
-
-          <!-- Links -->
-          <div>
-            <h4 class="font-bold mb-4">Produk</h4>
-            <ul class="space-y-2 text-gray-400">
+            <h4 class="font-bold text-gray-400 uppercase tracking-wider mb-6">
+              Product
+            </h4>
+            <ul class="space-y-4 text-gray-500">
               <li>
-                <a href="#" class="hover:text-primary transition">Monitoring</a>
+                <a href="#" class="hover:text-white transition">Download</a>
               </li>
               <li>
-                <a href="#" class="hover:text-primary transition">Irigasi</a>
+                <a href="#" class="hover:text-white transition">Features</a>
               </li>
               <li>
-                <a href="#" class="hover:text-primary transition">Analitik</a>
+                <a href="#" class="hover:text-white transition">Pricing</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition">Changelog</a>
               </li>
             </ul>
           </div>
-
           <div>
-            <h4 class="font-bold mb-4">Perusahaan</h4>
-            <ul class="space-y-2 text-gray-400">
+            <h4 class="font-bold text-gray-400 uppercase tracking-wider mb-6">
+              Resources
+            </h4>
+            <ul class="space-y-4 text-gray-500">
+              <li><a href="#" class="hover:text-white transition">Blog</a></li>
               <li>
-                <a href="#" class="hover:text-primary transition"
-                  >Tentang Kami</a
+                <a href="#" class="hover:text-white transition"
+                  >Documentation</a
                 >
               </li>
               <li>
-                <a href="#" class="hover:text-primary transition">Karir</a>
+                <a href="#" class="hover:text-white transition">Use Cases</a>
               </li>
               <li>
-                <a href="#" class="hover:text-primary transition">Blog</a>
+                <a href="#" class="hover:text-white transition">Support</a>
               </li>
             </ul>
           </div>
-
           <div>
-            <h4 class="font-bold mb-4">Kontak</h4>
-            <ul class="space-y-2 text-gray-400">
-              <li>Email: greenuity.idn@gmail.com</li>
-              <li>Phone: +62 896-6803-4206</li>
-              <li>Bintan, Indonesia</li>
+            <h4 class="font-bold text-gray-400 uppercase tracking-wider mb-6">
+              Company
+            </h4>
+            <ul class="space-y-4 text-gray-500">
+              <li>
+                <a href="#" class="hover:text-white transition">About Us</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition">Careers</a>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition">Contact</a>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
-          <p>&copy; 2025 Greenuity. All rights reserved.</p>
+        <!-- Big Logo Text -->
+        <div class="text-center mb-24">
+          <h1
+            class="text-[12vw] md:text-[15vw] font-bold leading-none tracking-tighter text-white select-none font-heading"
+          >
+            Greenuity
+          </h1>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div
+          class="flex flex-col md:flex-row items-center justify-between border-t border-gray-800 pt-8 gap-6"
+        >
+          <div class="text-gray-500 text-sm">
+            &copy; 2025 Greenuity. All rights reserved.
+          </div>
+
+          <div class="flex items-center gap-6 text-sm text-gray-500">
+            <a href="#" class="hover:text-white transition">About Greenuity</a>
+            <a href="#" class="hover:text-white transition">Privacy</a>
+            <a href="#" class="hover:text-white transition">Terms</a>
+            <a href="#" class="hover:text-white transition">Help Center</a>
+          </div>
+
+          <div class="flex items-center gap-6">
+            <a href="#" class="text-gray-500 hover:text-white transition">
+              <svg
+                class="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"
+                ></path>
+              </svg>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-white transition">
+              <svg
+                class="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
 
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      AOS.init({
+        once: true,
+        offset: 100,
+      });
+    </script>
     <script src="/js/index.js"></script>
   </body>
 </html>
