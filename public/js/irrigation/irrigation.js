@@ -228,9 +228,8 @@ function controlPump() {
   database.ref(`devices/${selectedDevice}/control/pump_command`).set(newCmd);
 
   database.ref(`devices/${selectedDevice}/logs`).update({
-    last_reason: `Pompa ${
-      newCmd === "ON" ? "dinyalakan" : "dimatikan"
-    } oleh pengguna`,
+    last_reason: `Pompa ${newCmd === "ON" ? "dinyalakan" : "dimatikan"
+      } oleh pengguna`,
     last_time: Date.now(),
   });
 }
@@ -482,8 +481,8 @@ function renderSchedules() {
         </div>
         <div>
           <div class="text-sm font-semibold text-gray-800">${String(
-            s.hour
-          ).padStart(2, "0")}:${String(s.minute).padStart(2, "0")}</div>
+      s.hour
+    ).padStart(2, "0")}:${String(s.minute).padStart(2, "0")}</div>
           <div class="text-xs text-gray-500">${s.duration}s</div>
         </div>
       </div>
@@ -513,10 +512,9 @@ function renderLog(reason) {
   const color = pumpActive ? "green" : "red";
 
   pumpLogContainer.innerHTML = `
-    <div class="rounded-lg p-4 border-l-4 ${
-      color === "green"
-        ? "border-green-500 bg-green-50"
-        : "border-red-500 bg-red-50"
+    <div class="rounded-lg p-4 border-l-4 ${color === "green"
+      ? "border-green-500 bg-green-50"
+      : "border-red-500 bg-red-50"
     }">
       <div class="flex items-center justify-between mb-3">
         <span class="text-sm font-semibold text-gray-800">
@@ -607,8 +605,8 @@ function goToHome() {
 function goToMonitoring() {
   window.location.href = "/pages/monitoring/monitoring.html";
 }
-function goToAnalysis() {
-  window.location.href = "/pages/analysis/analysis.html";
+function goToEducation() {
+  window.location.href = "/pages/education/education.html";
 }
 function goToProfile() {
   window.location.href = "/pages/profile/profile.html";

@@ -5,14 +5,28 @@ function goToHome() {
 function goToMonitoring() {
   window.location.href = "../monitoring/monitoring.html";
 }
-function goToAnalysis() {
-  window.location.href = "../analysis/analysis.html";
+function goToEducation() {
+  window.location.href = "../education/education.html";
 }
 function goToIrrigation() {
   window.location.href = "../irrigation/irrigation.html";
 }
 function goToProfile() {
   window.location.href = "../profile/profile.html";
+}
+
+// New Menu Functions
+function goToIdentify() {
+  window.location.href = "../analysis/analysis.html";
+}
+function goToPlantCare() {
+  console.log("Plant Care clicked");
+}
+function goToDiagnose() {
+  console.log("Diagnose clicked");
+}
+function goToAIChat() {
+  console.log("AI Chat clicked");
 }
 
 // Update DateTime

@@ -39,15 +39,7 @@
     <!-- Header with Weather Background -->
     <div
       class="relative text-white pb-32 pt-8 px-6 rounded-b-[2.5rem]"
-      style="
-        background: linear-gradient(
-            135deg,
-            rgba(14, 59, 67, 0.95),
-            rgba(27, 77, 87, 0.85)
-          ),
-          url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800')
-            center/cover;
-      "
+      style="background: #1b4d57"
     >
       <!-- Top Bar -->
       <div class="flex items-center justify-between mb-8">
@@ -159,151 +151,187 @@
       </div>
     </div>
 
-    <!-- Quick Stats Cards -->
+    <!-- Main Menu Grid -->
     <div class="px-6 -mt-20 relative z-10">
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <!-- Irigasi Otomatis -->
-        <div
-          class="bg-gradient-to-br from-green-400 to-green-500 rounded-2xl p-4 text-white"
-        >
-          <div
-            class="w-10 h-10 bg-white/30 rounded-xl flex items-center justify-center mb-3"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <p class="text-xs font-medium mb-1">Irigasi Otomatis</p>
-          <p class="text-[10px] opacity-90 mb-2">Aktif 10 menit lalu</p>
+      <div class="bg-white rounded-3xl p-6 shadow-lg mb-24">
+        <div class="grid grid-cols-4 gap-4">
+          <!-- Identify -->
           <button
-            class="bg-white/30 hover:bg-white/40 text-xs px-3 py-1 rounded-full font-medium transition-all"
+            onclick="goToIdentify()"
+            class="flex flex-col items-center gap-2 group"
           >
-            Lihat Aktif
+            <div
+              class="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-500 group-hover:bg-yellow-100 transition-colors"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <span class="text-[10px] font-medium text-yellow-500"
+              >Identify</span
+            >
+          </button>
+
+          <!-- Plant Care -->
+          <button
+            onclick="goToPlantCare()"
+            class="flex flex-col items-center gap-2 group"
+          >
+            <div
+              class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-500 group-hover:bg-green-100 transition-colors"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+            </div>
+            <span class="text-[10px] font-medium text-green-500"
+              >Plant Care</span
+            >
+          </button>
+
+          <!-- Diagnose -->
+          <button
+            onclick="goToDiagnose()"
+            class="flex flex-col items-center gap-2 group"
+          >
+            <div
+              class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 group-hover:bg-red-100 transition-colors"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+            </div>
+            <span class="text-[10px] font-medium text-red-500">Diagnose</span>
+          </button>
+
+          <!-- AI Chat -->
+          <button
+            onclick="goToAIChat()"
+            class="flex flex-col items-center gap-2 group"
+          >
+            <div
+              class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 group-hover:bg-blue-100 transition-colors"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                />
+              </svg>
+            </div>
+            <span class="text-[10px] font-medium text-blue-500">AI Chat</span>
           </button>
         </div>
+      </div>
+    </div>
 
-        <!-- Kelembapan -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm">
-          <div
-            class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mb-3"
-          >
-            <svg
-              class="w-6 h-6 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
-              />
-            </svg>
-          </div>
-          <p class="text-xs text-gray-600 font-medium mb-1">Kelembapan tanah</p>
-          <p class="text-2xl font-bold text-gray-800">60%</p>
-        </div>
-
-        <!-- Jadwal -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm">
-          <div
-            class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mb-3"
-          >
-            <svg
-              class="w-6 h-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <p class="text-xs text-gray-600 font-medium mb-1">
-            Jadwal berikutnya
-          </p>
-          <p class="text-xs font-bold text-gray-800">Besok 07:00</p>
-        </div>
+    <!-- Tips & Artikel Section -->
+    <div class="px-6 mb-24">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-800">Tips & Artikel</h3>
+        <a href="#" class="text-sm text-primary font-medium hover:underline"
+          >Lihat Semua</a
+        >
       </div>
 
-      <!-- Rekomendasi Aktivitas -->
-      <div class="mb-6">
-        <h3 class="text-base font-bold text-gray-800 mb-3">
-          Rekomendasi Aktivitas
-        </h3>
-
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Card 1 -->
-          <div
-            class="bg-gradient-to-br from-green-100 to-green-200 rounded-2xl p-4"
-          >
-            <div
-              class="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-3"
+      <div class="space-y-4">
+        <!-- Article 1 -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center">
+          <img
+            src="https://images.unsplash.com/photo-1591857177580-dc82b9bf4e1d?w=200"
+            alt="Tips 1"
+            class="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+          />
+          <div>
+            <span
+              class="text-[10px] bg-green-100 text-green-600 px-2 py-1 rounded-full font-medium"
+              >Tips</span
             >
-              <svg
-                class="w-7 h-7 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <p class="text-sm font-semibold text-gray-800 mb-1">
-              Langit sebagian berawan,
-            </p>
-            <p class="text-xs text-gray-700">
-              cocok untuk perawatan tanaman hari ini!
-            </p>
+            <h4 class="font-bold text-gray-800 text-sm mt-1 line-clamp-2">
+              Cara Merawat Tanaman Cabai di Musim Hujan
+            </h4>
+            <p class="text-[10px] text-gray-500 mt-1">5 menit baca</p>
           </div>
+        </div>
 
-          <!-- Card 2 -->
-          <div
-            class="bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-2xl p-4"
-          >
-            <div
-              class="w-12 h-12 bg-white rounded-xl flex items-center justify-center mb-3"
+        <!-- Article 2 -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center">
+          <img
+            src="https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=200"
+            alt="Tips 2"
+            class="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+          />
+          <div>
+            <span
+              class="text-[10px] bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-medium"
+              >Berita</span
             >
-              <svg
-                class="w-7 h-7 text-yellow-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
-            </div>
-            <p class="text-sm font-semibold text-gray-800 mb-1">
-              Paparan sinar matahari
-            </p>
-            <p class="text-xs text-gray-700">
-              optimal untuk fotosintesis tanaman
-            </p>
+            <h4 class="font-bold text-gray-800 text-sm mt-1 line-clamp-2">
+              Teknologi IoT Terbaru untuk Pertanian Modern
+            </h4>
+            <p class="text-[10px] text-gray-500 mt-1">3 menit baca</p>
+          </div>
+        </div>
+
+        <!-- Article 3 -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm flex gap-4 items-center">
+          <img
+            src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=200"
+            alt="Tips 3"
+            class="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+          />
+          <div>
+            <span
+              class="text-[10px] bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full font-medium"
+              >Edukasi</span
+            >
+            <h4 class="font-bold text-gray-800 text-sm mt-1 line-clamp-2">
+              Manfaat Pupuk Organik Cair untuk Sayuran
+            </h4>
+            <p class="text-[10px] text-gray-500 mt-1">7 menit baca</p>
           </div>
         </div>
       </div>
@@ -374,7 +402,7 @@
           </button>
 
           <button
-            onclick="goToAnalysis()"
+            onclick="goToEducation()"
             class="flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-600 transition"
           >
             <svg
@@ -388,10 +416,11 @@
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M7.5 3.75H6A2.25 2.25 0 0 0 3.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0 1 20.25 6v1.5m0 9V18A2.25 2.25 0 0 1 18 20.25h-1.5m-9 0H6A2.25 2.25 0 0 1 3.75 18v-1.5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
               />
             </svg>
-            <span class="text-[10px]">Scan</span>
+
+            <span class="text-[10px]">Edukasi</span>
           </button>
 
           <button

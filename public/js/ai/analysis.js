@@ -3,15 +3,15 @@ function goToHome() {
 }
 
 function goToMonitoring() {
-    window.location.href = "/pages/monitoring/monitoring.html"; 
+    window.location.href = "/pages/monitoring/monitoring.html";
 }
 
 function goToIrrigation() {
     window.location.href = "/pages/irrigation/irrigation.html";
 }
 
-function goToAnalysis() {
-    window.location.href = "/pages/analysis/analysis.html";
+function goToEducation() {
+    window.location.href = "/pages/education/education.html";
 }
 
 function goToProfile() {

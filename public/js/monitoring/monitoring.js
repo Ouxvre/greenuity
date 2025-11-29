@@ -100,13 +100,11 @@ function createDeviceCard(deviceId, deviceData) {
   card.innerHTML = `
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
-              <div class="text-2xl">${
-                plantEmojis[info.jenis_tanaman] || "🌱"
-              }</div>
+              <div class="text-2xl">${plantEmojis[info.jenis_tanaman] || "🌱"
+    }</div>
               <div>
-                <h4 class="font-semibold text-gray-900 text-sm">${
-                  info.nama_lahan || "Kebun " + plantName
-                }</h4>
+                <h4 class="font-semibold text-gray-900 text-sm">${info.nama_lahan || "Kebun " + plantName
+    }</h4>
                 <p class="text-xs text-gray-500">Ketuk untuk melihat detail</p>
               </div>
             </div>
@@ -148,8 +146,8 @@ function goToIrrigation() {
   window.location.href = "../irrigation/irrigation.html";
 }
 
-function goToAnalysis() {
-  window.location.href = "../analysis/analysis.html";
+function goToEducation() {
+  window.location.href = "../education/education.html";
 }
 
 function goToProfile() {
